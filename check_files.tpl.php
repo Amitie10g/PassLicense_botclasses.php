@@ -23,7 +23,7 @@
 
 if(!defined('IN_PassLicense')) die(); ?><html>
   <head>
-    <title>UploadFile (botclasses.php) by Davod</title>
+    <title>PassLicense (botclasses.php) by Davod</title>
     <style>
 	body{
 		font-size:12pt;
