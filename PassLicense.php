@@ -5,7 +5,6 @@
  *
  *  (c) 2015 Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
  *
- *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 3 of the License, or
@@ -28,7 +27,7 @@ error_reporting(E_ALL ^ E_WARNING & E_NOTICE);
 
 $user = '';
 $password = '';
-$project = 'https://commons.wikimedia.org/w/api.php'; // http(s)://<wiki_url>/w/api.php
+$project = '';
 
 $replace = '';
 $with = '';
@@ -43,9 +42,9 @@ define('TEMP_PATH',realpath(sys_get_temp_dir()));
 if(isset($_GET['pass'])){
 
 	$login = $wiki->login($user,$password);
-	if($login['login']['result'] != 'Success') die('Not logged in. Check your user and password.');
+	if($login['login']['result'] != 'Success') die('Not logged in. Check your user and password');
 
-	if(empty($_POST['pagename'])) die('No data given.');
+	if(empty($_POST['pagename'])) die('No data given');
 	
 	$pages = $_POST['pagename'];
 
@@ -57,7 +56,7 @@ if(isset($_GET['pass'])){
 		$content = $wiki->replacestring($page,$replace,$with);
 		$summary = 'License passed';
 		$result = $wiki->edit($page,$content,$summary);
-		var_dump($result); // Just for debug purposes
+		var_dump($result);
 	}
 }else{
 	$category = $_GET['category'];
