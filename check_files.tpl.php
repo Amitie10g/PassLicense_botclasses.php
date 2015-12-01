@@ -108,3 +108,5 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </form>
 <?php } ?>
 </div>
+</body>
+</html>
