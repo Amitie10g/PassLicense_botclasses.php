@@ -1,7 +1,6 @@
 <?php
 /**
  * botclasses.php - Bot classes for interacting with mediawiki.
- * Sightly modified version.
  *
  *  (c) 2008-2012 Chris G - http://en.wikipedia.org/wiki/User:Chris_G
  *  (c) 2009-2010 Fale - http://en.wikipedia.org/wiki/User:Fale
@@ -12,7 +11,7 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
+ *  the Free Software Foundation; either version 3 of the License, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
@@ -32,14 +31,18 @@
  *      Gutza   - [[User:Gutza]]        - Submitted a patch for http->setHTTPcreds(), and http->quiet
  *      Sean    - [[User:SColombo]]     - Wrote the lyricwiki class (now moved to lyricswiki.php)
  *      Brain   - [[User:Brian_McNeil]] - Wrote wikipedia->getfileuploader() and wikipedia->getfilelocation
+ *
+ *  Modified by Davod <https://commons.wikimedia.org/wiki/User:Amitie 10g> and relicensed under the GNU GPLv3
+ *
+ *  Changes:
+ *
+ *    Class "wikimedia" renamed to "wiki"
+ *    Class "extended" merged into "wiki", to avoid issues
+ *    Removed the echo statements. The classes should not output anything
+ *    Removed parts commented intender for debug
+ *    Removed several unneded functions
+ *    Fixed the cURL issues with PHP5+
  **/
-
-/*
- * Forks/Alternative versions:
- * There's a couple of different versions of this code lying around.
- * I'll try to list them here for reference purpopses:
- * 		https://en.wikinews.org/wiki/User:NewsieBot/botclasses.php
- */
 
 /**
  * This class is designed to provide a simplified interface to cURL which maintains cookies.
@@ -75,8 +78,8 @@ class http {
     function __construct () {
         $this->ch = curl_init();
         $this->uid = dechex(rand(0,99999999));
-        curl_setopt($this->ch,CURLOPT_COOKIEJAR,'/tmp/cluewikibot.cookies.'.$this->uid.'.dat');
-        curl_setopt($this->ch,CURLOPT_COOKIEFILE,'/tmp/cluewikibot.cookies.'.$this->uid.'.dat');
+        curl_setopt($this->ch,CURLOPT_COOKIEJAR,TEMP_PATH'cluewikibot.cookies.'.$this->uid.'.dat');
+        curl_setopt($this->ch,CURLOPT_COOKIEFILE,TEMP_PATH'cluewikibot.cookies.'.$this->uid.'.dat');
         curl_setopt($this->ch,CURLOPT_MAXCONNECTS,100);
         $this->postfollowredirs = 0;
         $this->getfollowredirs = 1;
@@ -100,22 +103,16 @@ class http {
         curl_setopt($this->ch,CURLOPT_FOLLOWLOCATION,$this->postfollowredirs);
         curl_setopt($this->ch,CURLOPT_MAXREDIRS,10);
 	curl_setopt( $this->ch, CURLOPT_HTTPHEADER, $this->httpHeader );
-        #curl_setopt($this->ch, CURLOPT_HTTPHEADER, array('Expect:'));
-        #curl_setopt($this->ch, CURLOPT_HTTPHEADER,
-	#    'Content-Type: application/x-www-form-urlencoded' );
         curl_setopt($this->ch,CURLOPT_RETURNTRANSFER,1);
         curl_setopt($this->ch,CURLOPT_TIMEOUT,30);
         curl_setopt($this->ch,CURLOPT_CONNECTTIMEOUT,10);
         curl_setopt($this->ch,CURLOPT_POST,1);
-//      curl_setopt($this->ch,CURLOPT_FAILONERROR,1);
-//	curl_setopt($this->ch,CURLOPT_POSTFIELDS, substr($this->data_encode($data), 0, -1) );
         curl_setopt($this->ch,CURLOPT_POSTFIELDS, $data);
         $data = curl_exec($this->ch);
         return $data;
     }
 
     function get ( $url ) {
-        //echo 'GET: '.$url."\n";
         $time = microtime(1);
         curl_setopt($this->ch,CURLOPT_URL,$url);
         curl_setopt($this->ch,CURLOPT_USERAGENT,$this->userAgent);
@@ -487,59 +484,6 @@ class wiki {
             return $ret['edittoken'];
         }
     }
-
-    /**
-     * Purges the cache of $page.
-     * @param $page The page to purge.
-     * @return Api result.
-     **/
-    function purgeCache($page) {
-        return $this->query('?action=purge&titles='.urlencode($page).'&format=php');
-    }
-
-    /**
-     * Checks if $user has email enabled.
-     * Uses index.php.
-     * @param $user The user to check.
-     * @return bool.
-     **/
-    function checkEmail($user) {
-        $x = $this->query('?action=query&meta=allmessages&ammessages=noemailtext|notargettext&amlang=en&format=php');
-        $messages[0] = $x['query']['allmessages'][0]['*'];
-        $messages[1] = $x['query']['allmessages'][1]['*'];
-        $page = $this->http->get(str_replace('api.php','index.php',$this->url).'?title=Special:EmailUser&target='.urlencode($user));
-        if (preg_match('/('.preg_quote($messages[0],'/').'|'.preg_quote($messages[1],'/').')/i',$page)) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    /**
-     * Returns all the pages $page is transcluded on.
-     * @param $page The page to get the transclusions from.
-     * @param $sleep The time to sleep between requets (set to null to disable).
-     * @return array.
-     **/
-    function getTransclusions($page,$sleep=null,$extra=null) {
-        $continue = '';
-        $pages = array();
-        while (true) {
-            $ret = $this->query('?action=query&list=embeddedin&eititle='.urlencode($page).$continue.$extra.'&eilimit=500&format=php');
-            if ($sleep != null) {
-                sleep($sleep);
-            }
-            foreach ($ret['query']['embeddedin'] as $x) {
-                $pages[] = $x['title'];
-            }
-            if (isset($ret['query-continue']['embeddedin']['eicontinue'])) {
-                $continue = '&eicontinue='.$ret['query-continue']['embeddedin']['eicontinue'];
-            } else {
-                return $pages;
-            }
-        }
-    }
-
     /**
      * Edits a page.
      * @param $page Page name to edit.
@@ -589,197 +533,6 @@ class wiki {
         $data.= "\n" . $text;
         return $this->edit( $page, $data, $summary, $minor, $bot );
     }
-    
-    /**
-     * Moves a page.
-     * @param $old Name of page to move.
-     * @param $new New page title.
-     * @param $reason Move summary to use.
-     * @param $movetalk Move the page's talkpage as well.
-     * @return api result
-     **/
-    function move ($old,$new,$reason,$options=null) {
-        if ($this->token==null) {
-            $this->token = $this->getedittoken();
-        }
-        $params = array(
-            'from' => $old,
-            'to' => $new,
-            'token' => $this->token,
-            'reason' => $reason
-        );
-        if ($options != null) {
-            $option = explode('|',$options);
-            foreach ($option as $o) {
-                $params[$o] = true;
-            }
-        }
-        return $this->query('?action=move&format=php',$params);
-    }
-
-    /**
-     * Rollback an edit.
-     * @param $title Title of page to rollback.
-     * @param $user Username of last edit to the page to rollback.
-     * @param $reason Edit summary to use for rollback.
-     * @param $bot mark the rollback as bot.
-     * @return api result
-     **/
-    function rollback ($title,$user,$reason=null,$bot=false) {
-        $ret = $this->query('?action=query&prop=revisions&rvtoken=rollback&titles='.urlencode($title).'&format=php');
-        foreach ($ret['query']['pages'] as $x) {
-            $token = $x['revisions'][0]['rollbacktoken'];
-            break;
-        }
-        $params = array(
-            'title' => $title,
-            'user' => $user,
-            'token' => $token
-        );
-        if ($bot) {
-            $params['markbot'] = true;
-        }
-        if ($reason != null) { $params['summary'] = $reason; }
-            return $this->query('?action=rollback&format=php',$params);
-        }
-
-    /**
-     * Blocks a user.
-     * @param $user The user to block.
-     * @param $reason The block reason.
-     * @param $expiry The block expiry.
-     * @param $options a piped string containing the block options.
-     * @return api result
-     **/
-    function block ($user,$reason='vand',$expiry='infinite',$options=null,$retry=true) {
-        if ($this->token==null) {
-            $this->token = $this->getedittoken();
-        }
-        $params = array(
-            'expiry' => $expiry,
-            'user' => $user,
-            'reason' => $reason,
-            'token' => $this->token
-        );
-        if ($options != null) {
-            $option = explode('|',$options);
-            foreach ($option as $o) {
-                $params[$o] = true;
-            }
-        }
-        $ret = $this->query('?action=block&format=php',$params);
-        /* Retry on a failed token. */
-        if ($retry and $ret['error']['code']=='badtoken') {
-            $this->token = $this->getedittoken();
-            return $this->block($user,$reason,$expiry,$options,false);
-        }
-        return $ret;
-    }
-
-    /**
-     * Unblocks a user.
-     * @param $user The user to unblock.
-     * @param $reason The unblock reason.
-     * @return api result
-     **/
-    function unblock ($user,$reason) {
-        if ($this->token==null) {
-            $this->token = $this->getedittoken();
-        }
-        $params = array(
-            'user' => $user,
-            'reason' => $reason,
-            'token' => $this->token
-        );
-        return $this->query('?action=unblock&format=php',$params);
-    }
-
-    /**
-     * Emails a user.
-     * @param $target The user to email.
-     * @param $subject The email subject.
-     * @param $text The body of the email.
-     * @param $ccme Send a copy of the email to the user logged in.
-     * @return api result
-     **/
-    function email ($target,$subject,$text,$ccme=false) {
-        if ($this->token==null) {
-            $this->token = $this->getedittoken();
-        }
-        $params = array(
-            'target' => $target,
-            'subject' => $subject,
-            'text' => $text,
-            'token' => $this->token
-        );
-        if ($ccme) {
-            $params['ccme'] = true;
-        }
-        return $this->query('?action=emailuser&format=php',$params);
-    }
-
-    /**
-     * Deletes a page.
-     * @param $title The page to delete.
-     * @param $reason The delete reason.
-     * @return api result
-     **/
-    function delete ($title,$reason) {
-        if ($this->token==null) {
-            $this->token = $this->getedittoken();
-        }
-        $params = array(
-            'title' => $title,
-            'reason' => $reason,
-            'token' => $this->token
-        );
-        return $this->query('?action=delete&format=php',$params);
-    }
-
-    /**
-     * Undeletes a page.
-     * @param $title The page to undelete.
-     * @param $reason The undelete reason.
-     * @return api result
-     **/
-    function undelete ($title,$reason) {
-        if ($this->token==null) {
-            $this->token = $this->getedittoken();
-        }
-        $params = array(
-            'title' => $title,
-            'reason' => $reason,
-            'token' => $this->token
-        );
-        return $this->query('?action=undelete&format=php',$params);
-    }
-
-    /**
-     * (Un)Protects a page.
-     * @param $title The page to (un)protect.
-     * @param $protections The protection levels (e.g. 'edit=autoconfirmed|move=sysop')
-     * @param $expiry When the protection should expire (e.g. '1 day|infinite')
-     * @param $reason The (un)protect reason.
-     * @param $cascade Enable cascading protection? (defaults to false)
-     * @return api result
-     **/
-    function protect ($title,$protections,$expiry,$reason,$cascade=false) {
-        if ($this->token==null) {
-            $this->token = $this->getedittoken();
-        }
-        $params = array(
-            'title' => $title,
-            'protections' => $protections,
-            'expiry' => $expiry,
-            'reason' => $reason,
-            'token' => $this->token
-        );
-        if ($cascade) {
-            $params['cascade'] = true;
-        }
-        return $this->query('?action=protect&format=php',$params);
-    }
-
     /**
      * Uploads an image.
      * @param $page The destination file name.
@@ -805,85 +558,7 @@ class wiki {
         );
         return $this->query( '?action=upload&format=php', $params );
     }
-    
-    /*
-    $page - page
-    $revs - rev ids to delete (seperated with ,)
-    $comment - delete comment
-    */
-    function revdel ($page,$revs,$comment) {
-    	
-        if ($this->token==null) {
-            $this->token = $this->getedittoken();
-        }
-        
-        $post = array(
-            'wpEditToken'       => $this->token,
-            'ids' => $revs,
-            'target' => $page,
-            'type' => 'revision',
-            'wpHidePrimary' => 1,
-            'wpHideComment' => 1,
-            'wpHideUser' => 0,
-            'wpRevDeleteReasonList' => 'other',
-            'wpReason' => $comment,
-            'wpSubmit' => 'Apply to selected revision(s)'
-        );
-        return $this->http->post(str_replace('api.php','index.php',$this->url).'?title=Special:RevisionDelete&action=submit',$post);
-    }
-
-    /**
-     * Creates a new account.
-     * Uses index.php as there is no api to create accounts yet :(
-     * @param $username The username the new account will have.
-     * @param $password The password the new account will have.
-     * @param $email The email the new account will have.
-     **/
-    function createaccount ($username,$password,$email=null) {
-        $post = array(
-            'wpName' => $username,
-            'wpPassword' => $password,
-            'wpRetype' => $password,
-            'wpEmail' => $email,
-            'wpRemember' => 0,
-            'wpIgnoreAntiSpoof' => 0,
-            'wpCreateaccount' => 'Create account',
-        );
-        return $this->http->post(str_replace('api.php','index.php',$this->url).'?title=Special:UserLogin&action=submitlogin&type=signup',$post);
-    }
-
-    /**
-     * Changes a users rights.
-     * @param $user   The user we're working with.
-     * @param $add    A pipe-separated list of groups you want to add.
-     * @param $remove A pipe-separated list of groups you want to remove.
-     * @param $reason The reason for the change (defaults to '').
-     **/
-    function userrights ($user,$add,$remove,$reason='') {
-        // get the userrights token
-        $token = $this->query('?action=query&list=users&ususers='.urlencode($user).'&ustoken=userrights&format=php');
-        $token = $token['query']['users'][0]['userrightstoken'];
-        $params = array(
-            'user' => $user,
-            'token' => $token,
-            'add' => $add,
-            'remove' => $remove,
-            'reason' => $reason
-        );
-        return $this->query('?action=userrights&format=php',$params);
-    }
-	
-    /**
-     * Gets the number of images matching a particular sha1 hash.
-     * @param $hash The sha1 hash for an image.
-     * @return The number of images with the same sha1 hash.
-     **/
-    function imagematches ($hash) {
-		$x = $this->query('?action=query&list=allimages&format=php&aisha1='.$hash);
-		return count($x['query']['allimages']);
-    }
-
-	/**  BMcN 2012-09-16
+    /**  BMcN 2012-09-16
      * Retrieve a media file's actual location.
      * @param $page The "File:" page on the wiki which the URL of is desired.
      * @return The URL pointing directly to the media file (Eg http://upload.mediawiki.org/wikipedia/en/1/1/Example.jpg)
@@ -912,22 +587,9 @@ class wiki {
                 return false;
         }
     }
-    
-    /**
-     * Add a category to a page
-     * @param $page The page we're working with.
-     * @param $category The category that you want to add.
-     * @param $summary Edit summary to use.
-     * @param $minor Whether or not to mark edit as minor.  (Default false)
-     * @param $bot Whether or not to mark edit as a bot edit.  (Default true)
-     * @return api result
-     **/
-    function addcategory( $page, $category, $summary = '', $minor = false, $bot = true )
-    {
-        $data = $this->getpage( $page );
-        $data.= "\n[[Category:" . $category . "]]";
-        return $this->edit( $page, $data, $summary, $minor, $bot );
-    }
+/**
+ *Functions originaly form extended Class
+ **/
 
     /**
      * Find a string
@@ -949,12 +611,14 @@ class wiki {
      * @param $page The page we're working with.
      * @param $string The string that you want to replace.
      * @param $newstring The string that will replace the present string.
+     * @param $regex if use preg_replace() instead of str_replace()
      * @return the new text of page
      **/
-    function replacestring( $page, $string, $newstring )
+    function replacestring( $page, $string, $newstring, $regex=false)
     {
         $data = $this->getpage( $page );
-        return str_replace( $string, $newstring, $data );
+	if($regex === true) return preg_replace( $string, $newstring, $data );
+        else return str_replace( $string, $newstring, $data );
     }
     
     /**

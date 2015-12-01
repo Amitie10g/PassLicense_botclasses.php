@@ -19,25 +19,34 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
+ *  Warning: This script uses a modified version of botclasses.php
+ *  You SHOULD use that modified version instead of the original one.
+ *
+ *  This script is still in developement, but works as desired.
+ *  Any contributions is welcome.
+ *
  **/
 
 // Set the Error reporting if you need
 //error_reporting(E_ERROR | E_WARNING | E_PARSE /*| E_NOTICE */);
 error_reporting(E_ALL ^ E_WARNING & E_NOTICE);
 
+define('IN_PassLicense',true);
+define('TEMP_PATH',realpath(sys_get_temp_dir()));
+
+
+// Edit the following as you need
 $user = '';
 $password = '';
-$project = '';
+$project = ''; // https://commons.wikimedia.org/w/api.php
 
+// Default tag replacement. Please consider to use regular expressions. See bellow
 $replace = '';
 $with = '';
 
 require_once('botclasses.php');
 
 $wiki = new wiki($project);
-
-define('IN_PassLicense',true);
-define('TEMP_PATH',realpath(sys_get_temp_dir()));
 
 if(isset($_GET['pass'])){
 
@@ -53,6 +62,7 @@ if(isset($_GET['pass'])){
 	
 	foreach($pages as $page){
 		$page = str_replace(' ','_',urldecode($page));
+		// Consider to use regular expressions. See $wiki->replacestring() for more information
 		$content = $wiki->replacestring($page,$replace,$with);
 		$summary = 'License passed';
 		$result = $wiki->edit($page,$content,$summary);
