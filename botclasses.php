@@ -37,9 +37,10 @@
  *  Changes:
  *
  *    Class "wikimedia" renamed to "wiki"
- *    Class "extended" merged into "wiki", to avoid issues
+ *    Functions in Class "extended" merged into "wiki", to avoid issues
+ *    Some functions modified
  *    Removed the echo statements. The classes should not output anything
- *    Removed parts commented intender for debug
+ *    Removed parts commented intended for debugging purposes
  *    Removed several unneded functions
  *    Fixed the cURL issues with PHP5+
  **/
@@ -611,7 +612,7 @@ class wiki {
      * @param $page The page we're working with.
      * @param $string The string that you want to replace.
      * @param $newstring The string that will replace the present string.
-     * @param $regex if use preg_replace() instead of str_replace()
+     * @param $regex if use preg_replace() instead of str_replace()*
      * @return the new text of page
      **/
     function replacestring( $page, $string, $newstring, $regex=false)
