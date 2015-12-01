@@ -26,12 +26,12 @@
 //error_reporting(E_ERROR | E_WARNING | E_PARSE /*| E_NOTICE */);
 error_reporting(E_ALL ^ E_WARNING & E_NOTICE);
 
-$user = 'Amitie 10g'; //DaBOT
-$password = 'FamiChan32???'; // 9c07957t1vbc7ec01fd1cdb7e723ec05c283598662c2a8d0c1
+$user = '';
+$password = '';
 $project = 'https://commons.wikimedia.org/w/api.php'; // http(s)://<wiki_url>/w/api.php
 
-$replace = '{{Indian navy}}';
-$with = '{{Indian navy|status=confirmed|reviewer=--~~~~}}';
+$replace = '';
+$with = '';
 
 require_once('botclasses.php');
 
@@ -43,9 +43,9 @@ define('TEMP_PATH',realpath(sys_get_temp_dir()));
 if(isset($_GET['pass'])){
 
 	$login = $wiki->login($user,$password);
-	if($login['login']['result'] != 'Success') die('Not logged in. Check your user and password');
+	if($login['login']['result'] != 'Success') die('Not logged in. Check your user and password.');
 
-	if(empty($_POST['pagename'])) die('No data given');
+	if(empty($_POST['pagename'])) die('No data given.');
 	
 	$pages = $_POST['pagename'];
 
@@ -57,9 +57,8 @@ if(isset($_GET['pass'])){
 		$content = $wiki->replacestring($page,$replace,$with);
 		$summary = 'License passed';
 		$result = $wiki->edit($page,$content,$summary);
-		var_dump($result);
+		var_dump($result); // Just for debug purposes
 	}
-
 }else{
 	$category = $_GET['category'];
 	$categories = $wiki->categorymembers("Category:$category",50,false);
