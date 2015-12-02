@@ -20,7 +20,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  **/
-
 if(!defined('IN_PassLicense')) die(); ?><html>
   <head>
     <title>PassLicense (botclasses.php) by Davod</title>
@@ -92,7 +91,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </form>
 <?php if(!empty($category)) { ?>
 <form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
-<p>Replace <input type="text" name="replace"> with <input type="text" name="with"></p>
+<p>Replace <input style="width:192px" type="text" name="replace"> with <input style="width:192px" type="text" name="with"></p>
 <?php $num = 0; foreach($categories as $page){ $page = str_replace(' ','_',$page); if($num%2 == 0) $bg = 'DDD'; else $bg = 'EEE'; ?>
 <div style="background:#<?= $bg ?>;margin:auto">
 <input style="float:left !important" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>">
