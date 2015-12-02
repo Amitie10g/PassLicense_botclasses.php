@@ -50,13 +50,16 @@ if(isset($_GET['pass'])){
 		// Consider to use regular expressions. See $wiki->replacestring() for more information
 		$content = $wiki->replacestring($page,$replace,$with);
 		$summary = 'License passed';
-		$result = $wiki->edit($page,$content,$summary);
-		var_dump($result);
+		$result[] = $wiki->edit($page,$content,$summary);
 	}
+	
+	// This meanwhile I develop the page that contains the result.
+	var_dump($result);
+	echo '<a href="'.$_SERVER['PHP_SELF'].'">Return to home</a>';	
 }else{
 	if(!empty($_GET['category'])){
 		$category = $_GET['category'];
-		$categories = $wiki->categorymembers("Category:$category",50,false);
+		$categories = $wiki->categorymembers("Category:$category",20,false);
 	}
 	require_once('check_files.tpl.php');
 }

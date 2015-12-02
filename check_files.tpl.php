@@ -91,19 +91,31 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </form>
 <?php if(!empty($category)) { ?>
 <form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
-<p>Replace <input style="width:192px" type="text" name="replace"> with <input style="width:192px" type="text" name="with"></p>
-<?php $num = 0; foreach($categories as $page){ $page = str_replace(' ','_',$page); if($num%2 == 0) $bg = 'DDD'; else $bg = 'EEE'; ?>
-<div style="background:#<?= $bg ?>;margin:auto">
+<p>Replace <input style="width:192px" type="text" name="replace" required> with <input style="width:192px" type="text" name="with" required></p>
+<?php
+	$num = 0;
+	foreach($categories as $page){
+		$page = str_replace(' ','_',$page);
+		if($num%2 == 0)
+		$bg = 'DDD';
+		else $bg = 'EEE';
+		
+		$thumburl = $wiki->getThumbURL($page);
+
+?><div style="background:#<?= $bg ?>;margin:auto">
 <input style="float:left !important" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>">
 <label style="float:left" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
 <input id="<?= urlencode($page) ?>_details" type="checkbox">
 <div class="upload_details" id="<?= urlencode($page) ?>_details"> 
+<div style="margin:10px auto;width:220px"><img src="<?= $thumburl ?>"></div>
 <iframe style="width:100%;height:500px" src="https://commons.wikimedia.org/wiki/<?= urlencode($page) ?>?action=render"></iframe>
 </div>
 </div>
 <div style="clear:both">&nbsp;</div>
-<?php $num++; } ?>
-<p><input type="submit" value="Pass files"></p>
+<?php
+		$num++;
+}
+?><p><input type="submit" value="Pass files"></p>
 </form>
 <?php } ?>
 </div>

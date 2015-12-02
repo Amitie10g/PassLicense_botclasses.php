@@ -628,8 +628,8 @@ class wiki {
      * @param $template The name of the template we are looking for
      * @return the searched (NULL if the template has not been found)
      **/
-    function gettemplate( $page, $template ) {
-       $data = $this->getpage( $page );
+    function gettemplate($page,$template) {
+       $data = $this->getpage($page);
        $template = preg_quote( $template, " " );
        $r = "/{{" . $template . "(?:[^{}]*(?:{{[^}]*}})?)+(?:[^}]*}})?/i";
        preg_match_all( $r, $data, $matches );
@@ -637,7 +637,20 @@ class wiki {
            return $matches[0][0];
        else
            return NULL;
-     }
-    
+    }
+     
+/**
+ *Functions added by me
+ **/
+ 
+    function getThumbURL($page,$width=200){
+	$thumbnail = $this->query("?action=query&format=php&titles=$page&prop=imageinfo&&iiprop=url&iiurlwidth=$width");
+	
+	$thumbnail = $thumbnail['query']['pages'];
+	sort($thumbnail);
+	$thumbnail = $thumbnail[0]['imageinfo']['0']['thumburl'];
+	
+	return $thumbnail;
+    }
 }
 ?>
