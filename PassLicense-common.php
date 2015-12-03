@@ -29,7 +29,10 @@
 if(!defined('IN_PassLicense')) die();
 define('TEMP_PATH',realpath(sys_get_temp_dir()));
 
-require_once('botclasses.php');
+require_once('class.php');
+
+$site_url = parse_url($project);
+$site_url = $site_url['scheme'].'://'.$site_url['host'].'/wiki/';
 
 $wiki = new wiki($project);
 
@@ -42,24 +45,33 @@ if(isset($_GET['pass'])){
 	
 	$pages = $_POST['pagename'];
 
-	if(!empty($_POST['replace'])) $replace = $_POST['replace'];
-	if(!empty($_POST['with'])) $with = $_POST['with'];
-	
+	//var_dump($_POST);
+
 	foreach($pages as $page){
 		$page = str_replace(' ','_',urldecode($page));
 		// Consider to use regular expressions. See $wiki->replacestring() for more information
-		$content = $wiki->replacestring($page,$replace,$with);
+		if(!empty($_POST['replaceg'])) $replace = $_POST['replaceg'];
+		elseif(!empty($_POST['replace'][$page])) $replace = $_POST['replace'][$page];
+		
+		if(!empty($_POST['withg'])) $with = $_POST['withg'];
+		elseif(!empty($_POST['with'][$page])) $replace = $_POST['with'][$page];
+		
+		if(!empty($_POST['regexg'])) $regex = true;
+		elseif(!empty($_POST['regex'][$page])) $regex = true;
+		
+		$content = $wiki->replacestring($page,$replace,$with,$regex);
+	
 		$summary = 'License passed';
 		$result[] = $wiki->edit($page,$content,$summary);
 	}
 	
 	// This meanwhile I develop the page that contains the result.
 	var_dump($result);
-	echo '<a href="'.$_SERVER['PHP_SELF'].'">Return to home</a>';	
+	echo '<p><a href="'.$_SERVER['PHP_SELF'].'">Return to home</a></p>';	
 }else{
 	if(!empty($_GET['category'])){
 		$category = $_GET['category'];
-		$categories = $wiki->categorymembers("Category:$category",20,false);
+		$categories = $wiki->categorymembers("Category:$category",5,false);
 	}
 	require_once('check_files.tpl.php');
 }

@@ -91,7 +91,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </form>
 <?php if(!empty($category)) { ?>
 <form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
-<p>Replace <input style="width:192px" type="text" name="replace" required> with <input style="width:192px" type="text" name="with" required></p>
+<p>Replace <input style="width:192px" type="text" name="replaceg" required> with <input style="width:192px" type="text" name="withg" required><label><input type="checkbox" name="regg" novalidate value="true" />Regex</label></p>
 <?php
 	$num = 0;
 	foreach($categories as $page){
@@ -100,22 +100,41 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		$bg = 'DDD';
 		else $bg = 'EEE';
 		
-		$thumburl = $wiki->getThumbURL($page);
+		$thumburl = $wiki->getThumbURL($page,300);
+		$text = $wiki->query("?action=parse&format=php&prop=text&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
+		$text = str_replace('<a','<a target="'.urlencode($page).'"',$text['parse']['text']['*']);
 
-?><div style="background:#<?= $bg ?>;margin:auto">
-<input style="float:left !important" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>">
+?><div style="background:#<?= $bg ?>;margin:auto;padding:5px">
+<input style="float:left !important" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>" />
 <label style="float:left" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
-<input id="<?= urlencode($page) ?>_details" type="checkbox">
+<input id="<?= urlencode($page) ?>_details" type="checkbox" />
 <div class="upload_details" id="<?= urlencode($page) ?>_details"> 
-<div style="margin:10px auto;width:220px"><img src="<?= $thumburl ?>"></div>
-<iframe style="width:100%;height:500px" src="https://commons.wikimedia.org/wiki/<?= urlencode($page) ?>?action=render"></iframe>
+<div style="margin:20px">
+	<div style="position:absolute;vertical-align:middle">
+		<div style="display:table-row">
+			<span style="display:table-cell">Replace:&nbsp;</span>
+			<span style="display:table-cell"><input style="width:300px" type="text" name="replace[<?= urlencode($page) ?>]" novalidate></span>
+		</div>
+		<div style="display:table-row">
+			<span style="display:table-cell">With:&nbsp;</span>
+			<span style="display:table-cell"><input style="width:300px" type="text" name="with[<?= urlencode($page) ?>]" novalidate></span>
+		</div>
+		<label><input type="checkbox" name="reg[<?= urlencode($page) ?>]" novalidate value="true" />Regex</label>
+
+	</div>
+	<div style="text-align:center">
+		<a href="<?= $site_url ?><?= urlencode($page) ?>">
+		<img src="<?= $thumburl ?>"></a>
+	</div>
+	<div style="clear:both">&nbsp;</div>
+	<div style="border:2px #000 dotted;width:49%;height:450px;float:left;overflow:auto"><?= $text ?></div>
+	<iframe name="<?= urlencode($page) ?>" style="display:inline-table;border:2px #000 dotted;width:49%;height:450px;float:right"></iframe>
 </div>
 </div>
-<div style="clear:both">&nbsp;</div>
-<?php
-		$num++;
-}
-?><p><input type="submit" value="Pass files"></p>
+<div style="clear:both;font-size:0">&nbsp;</div>
+</div>
+<?php $num++; } ?>
+<p><input type="submit" value="Pass files"></p>
 </form>
 <?php } ?>
 </div>

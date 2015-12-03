@@ -612,14 +612,14 @@ class wiki {
      * @param $page The page we're working with.
      * @param $string The string that you want to replace.
      * @param $newstring The string that will replace the present string.
-     * @param $regex if use preg_replace() instead of str_replace()*
+     * @param $regex if use preg_replace() instead of str_replace()
      * @return the new text of page
      **/
-    function replacestring( $page, $string, $newstring, $regex=false)
+    function replacestring($page,$string,$newstring,$regex=false)
     {
         $data = $this->getpage( $page );
-	if($regex === true) return preg_replace( $string, $newstring, $data );
-        else return str_replace( $string, $newstring, $data );
+	if($regex === true) return preg_replace($string,$newstring,$data);
+        else return str_replace($string,$newstring,$data);
     }
     
     /**
