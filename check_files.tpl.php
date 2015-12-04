@@ -175,7 +175,7 @@ with <input style="width:300px" type="text" name="withg" list="licenses_passed">
 <?php } ?>			</datalist>
 		</div>
 	</div>
-	<div style="text-align:center">
+	<div style="text-align:center;min-height:300px">
 		<a href="<?= $site_url ?><?= urlencode($page) ?>">
 		<img src="<?= $thumburl ?>"></a>
 	</div>

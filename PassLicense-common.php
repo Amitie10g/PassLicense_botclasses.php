@@ -75,7 +75,10 @@ if(isset($_GET['pass'])){
 	$pages = $_POST['pagename'];
 	
 	foreach($pages as $page){
-
+	
+		// Important: If you want to remove tags, DON'T pass null values (use at least a space)
+		// If the second or third 'with' is null, the value of the previous '' with will be used.
+		// This behaviour will be fixed in the next commit.
 		if(!empty($_POST['replace_1'][$page])) $replace[] = $_POST['replace_1'][$page];
 		if(!empty($_POST['with_1'][$page])) $with[] = $_POST['with_1'][$page];
 
