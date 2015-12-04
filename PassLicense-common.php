@@ -29,11 +29,40 @@
 if(!defined('IN_PassLicense')) die();
 define('TEMP_PATH',realpath(sys_get_temp_dir()));
 
-require_once('class.php');
-
 $site_url = parse_url($project);
 $site_url = $site_url['scheme'].'://'.$site_url['host'].'/wiki/';
 
+$licenses_search = array('LicenseReview',
+			 'Flickrreview',
+			 'picasareview',
+			 'Panoramioreview',
+			 'OpenStreetMapreview',
+			 'Indian navy');
+
+$licenses_passed = array('{{subst:Lrw|<site>}}',
+			 '{{subst:Frw}}',
+			 '{{Cc-by-3.0-BollywoodHungama|status=confirmed|reviewer=~~~}}',
+			 '{{picasareview|{{subst:REVISIONUSER}}|~~~~~}}',
+			 '{{Panoramioreview|{{subst:REVISIONUSER}}|~~~~~}}',
+			 '{{OpenStreetMapreview|{{subst:REVISIONUSER}}|{{subst:#time:Y-m-d}}}}',
+			 '{{Indian navy|status=confirmed|reviewer=~~~}}',
+			 '{{Cc-by-sa-3.0-FilmiTadka|passed|~~~}}');
+
+$categories_review = array('License_review_needed',
+			     'Flickr images needing human review',
+			     'Filmitadka review needed',
+			     'Fotopolska review needed',
+			     'Files from Freesound.org lacking source',
+			     'Images from HatenaFotolife needing License Review',
+			     'Unreviewed photos from indiannavy.nic.in',
+			     'Ipernity review needed',
+			     'Unreviewed files from National Repository of Open Educational Resources',
+			     'OpenPhoto review needed',
+			     'Panoramio images needing human review',
+			     'Lemill Web Albums files needing human review',
+			     'Unreviewed files from Bollywood Hungama');
+
+require_once('class.php');
 $wiki = new wiki($project);
 
 if(isset($_GET['pass'])){
@@ -44,35 +73,36 @@ if(isset($_GET['pass'])){
 	if(empty($_POST['pagename'])) die('No data given');
 	
 	$pages = $_POST['pagename'];
-
-	//var_dump($_POST);
-
-	foreach($pages as $page){
-		$page = str_replace(' ','_',urldecode($page));
-		// Consider to use regular expressions. See $wiki->replacestring() for more information
-		if(!empty($_POST['replaceg'])) $replace = $_POST['replaceg'];
-		elseif(!empty($_POST['replace'][$page])) $replace = $_POST['replace'][$page];
-		
-		if(!empty($_POST['withg'])) $with = $_POST['withg'];
-		elseif(!empty($_POST['with'][$page])) $replace = $_POST['with'][$page];
-		
-		if(!empty($_POST['regexg'])) $regex = true;
-		elseif(!empty($_POST['regex'][$page])) $regex = true;
-		
-		$content = $wiki->replacestring($page,$replace,$with,$regex);
 	
+	foreach($pages as $page){
+
+		if(!empty($_POST['replace_1'][$page])) $replace[] = $_POST['replace_1'][$page];
+		if(!empty($_POST['with_1'][$page])) $with[] = $_POST['with_1'][$page];
+
+		if(!empty($_POST['replace_2'][$page])) $replace[] = $_POST['replace_2'][$page];
+		if(!empty($_POST['with_2'][$page])) $with[] = $_POST['with_2'][$page];
+
+		if(!empty($_POST['replace_3'][$page])) $replace[] = $_POST['replace_3'][$page];
+		if(!empty($_POST['with_3'][$page])) $with[] = $_POST['with_3'][$page];
+
+		if(!empty($_POST['regex'][$page])) $regex = $_POST['regex'][$page];
+
+		$page = str_replace(' ','_',urldecode($page));
+
+		$content = $wiki->replacestring($page,$replace,$with,$regex);
+
 		$summary = 'License passed';
 		$result[] = $wiki->edit($page,$content,$summary);
 	}
-	
+
 	// This meanwhile I develop the page that contains the result.
 	var_dump($result);
 	echo '<p><a href="'.$_SERVER['PHP_SELF'].'">Return to home</a></p>';	
 }else{
 	if(!empty($_GET['category'])){
 		$category = $_GET['category'];
-		$categories = $wiki->categorymembers("Category:$category",5,false);
-	}
+		$categories = $wiki->categorymembers("Category:$category",50);
+	}	
 	require_once('check_files.tpl.php');
 }
 ?>

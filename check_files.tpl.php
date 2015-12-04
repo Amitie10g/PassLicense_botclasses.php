@@ -84,41 +84,100 @@ if(!defined('IN_PassLicense')) die(); ?><html>
   </head>
   <body>
   
-  <h2>Select files</h2>
+  <h1>PassLicense (botclasses.php)</h1>
 <div>
 <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>">
-<b>Enter a category:</b> <input style="width:300px" type="text" name="category" value="<?= $category ?>"><input type="submit">
+<b>Enter a category:</b> <input style="width:300px" type="text" name="category" value="<?= $category ?>" list="categories" onchange="this.orm.submit();">
+<datalist id="categories">
+	<?php foreach($categories_review as $category){ ?>
+	<option value="<?= $category ?>">
+<?php } ?></datalist>
+<input type="submit">
 </form>
-<?php if(!empty($category)) { ?>
+<?php if(!empty($_GET['category'])) { ?>
 <form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
-<p>Replace <input style="width:192px" type="text" name="replaceg" required> with <input style="width:192px" type="text" name="withg" required><label><input type="checkbox" name="regg" novalidate value="true" />Regex</label></p>
+<p>Replace <input style="width:300px" type="text" name="replaceg">
+with <input style="width:300px" type="text" name="withg" list="licenses_passed"><label>
+<datalist id="licenses_passed">
+<?php foreach($licenses_passed as $license){ ?>
+	<option value="<?= $license ?>">
+<?php } ?></datalist>
+<input type="checkbox" name="regg" novalidate value="true" />Regex</label></p>
 <?php
-	$num = 0;
-	foreach($categories as $page){
-		$page = str_replace(' ','_',$page);
-		if($num%2 == 0)
-		$bg = 'DDD';
-		else $bg = 'EEE';
+		$num = 0;
+		foreach($categories as $page){
+			$page = str_replace(' ','_',$page);
+			if($num%2 == 0)
+			$bg = 'DDD';
+			else $bg = 'EEE';
 		
-		$thumburl = $wiki->getThumbURL($page,300);
-		$text = $wiki->query("?action=parse&format=php&prop=text&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
-		$text = str_replace('<a','<a target="'.urlencode($page).'"',$text['parse']['text']['*']);
-
+			$thumburl = $wiki->getThumbURL($page,300);
+			$content = $wiki->query("?action=parse&format=php&prop=text%7Cwikitext&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
+			$text = str_replace('<a','<a target="'.urlencode($page).'"',$content['parse']['text']['*']);
+			$wikitext = $content['parse']['wikitext']['*'];
+			$templates = $wiki->getTemplates($wikitext,$licenses);
+		
 ?><div style="background:#<?= $bg ?>;margin:auto;padding:5px">
 <input style="float:left !important" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>" />
-<label style="float:left" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
+<label style="float:left;font-weight:bold" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
 <input id="<?= urlencode($page) ?>_details" type="checkbox" />
 <div class="upload_details" id="<?= urlencode($page) ?>_details"> 
 <div style="margin:20px">
 	<div style="position:absolute;vertical-align:middle">
+		<h3>Select and replace tags (up to three)</h3>
 		<div style="display:table-row">
 			<span style="display:table-cell">Replace:&nbsp;</span>
-			<span style="display:table-cell"><input style="width:300px" type="text" name="replace[<?= urlencode($page) ?>]" novalidate></span>
+			<span style="display:table-cell"><input style="width:300px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+			<datalist id="tags_<?= urlencode($page) ?>">
+<?php foreach($templates as $template){ ?>
+				<option value="<?= $template ?>">;
+<?php } ?>			</datalist>
 		</div>
 		<div style="display:table-row">
 			<span style="display:table-cell">With:&nbsp;</span>
-			<span style="display:table-cell"><input style="width:300px" type="text" name="with[<?= urlencode($page) ?>]" novalidate></span>
+			<span style="display:table-cell"><input style="width:300px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+			<datalist id="licenses_passed">
+<?php foreach($licenses_passed as $license){ ?>
+				<option value="<?= $license ?>">
+<?php } ?>			</datalist>
 		</div>
+		<div>&nbsp;</div>
+		<div style="display:table-row">
+			<span style="display:table-cell">Replace:&nbsp;</span>
+			<span style="display:table-cell"><input style="width:300px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+			<datalist id="tags_<?= urlencode($page) ?>">
+<?php foreach($templates as $template){ ?>
+				<option value="<?= $template ?>">;
+<?php } ?>			</datalist>
+		</div>
+		<div style="display:table-row">
+			<span style="display:table-cell">With:&nbsp;</span>
+			<span style="display:table-cell"><input style="width:300px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+			<datalist id="licenses_passed">
+<?php foreach($licenses_passed as $license){ ?>
+				<option value="<?= $license ?>">
+<?php } ?>			</datalist>
+		</div>
+		<div>&nbsp;</div>
+		<div style="display:table-row">
+			<span style="display:table-cell">Replace:&nbsp;</span>
+			<span style="display:table-cell"><input style="width:300px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+			<datalist id="tags_<?= urlencode($page) ?>">
+<?php foreach($templates as $template){ ?>
+				<option value="<?= $template ?>">;
+<?php } ?>			</datalist>
+		</div>
+		<div style="display:table-row">
+			<span style="display:table-cell">With:&nbsp;</span>
+			<span style="display:table-cell"><input style="width:300px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+			<datalist id="licenses_passed">
+<?php foreach($licenses_passed as $license){ ?>
+				<option value="<?= $license ?>">
+<?php } ?>			</datalist>
+		</div>
+
+
+
 		<label><input type="checkbox" name="reg[<?= urlencode($page) ?>]" novalidate value="true" />Regex</label>
 
 	</div>

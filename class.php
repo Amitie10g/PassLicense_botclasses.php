@@ -290,7 +290,7 @@ class wiki {
         $continue = '';
         $pages = array();
         while (true) {
-            $res = $this->query('?action=query&list=categorymembers&cmtype=file&cmtitle='.urlencode($category).'&format=php&cmlimit='.$limit.$continue);
+            $res = $this->query('?action=query&list=categorymembers&cmtype=file&cmsort=timestamp&cmdir=desc&format=php&cmtitle='.urlencode($category).'&cmlimit='.$limit.$continue);
             if (isset($x['error'])) {
                 return false;
             }
@@ -615,9 +615,8 @@ class wiki {
      * @param $regex if use preg_replace() instead of str_replace()
      * @return the new text of page
      **/
-    function replacestring($page,$string,$newstring,$regex=false)
-    {
-        $data = $this->getpage( $page );
+    function replacestring($page,$string,$newstring,$regex=false){
+        $data = $this->getpage($page);
 	if($regex === true) return preg_replace($string,$newstring,$data);
         else return str_replace($string,$newstring,$data);
     }
@@ -638,7 +637,7 @@ class wiki {
        else
            return NULL;
     }
-     
+
 /**
  *Functions added by me
  **/
@@ -651,6 +650,29 @@ class wiki {
 	$thumbnail = $thumbnail[0]['imageinfo']['0']['thumburl'];
 	
 	return $thumbnail;
+    }
+
+    /**
+     * Get the template tags with its parameters from a page (in wikitext format)
+     * @param $content The contents we're working with
+     * @param $tags The specific template tags what we want to match
+     * @return the searched (NULL if no tag has not been found)
+     **/
+    function getTemplates($content,$tags=null){
+	$pattern_search = '/\{\{([\p{L}\p{N}\p{P}\|= ]*)+\}\}/';
+	preg_match_all($pattern_search,$content,$templates);
+	$templates = $templates[0];
+	/* For some reason, neither strpos() nor preg_match() got match for $tag against $template 
+	if(is_array($tags)){
+		foreach($templates as $template){
+			foreach($tags as $tag){
+				$match = strpos($tag,$template);
+				if($match > 0) $templates[] = $template;
+			}
+		}
+	}
+	*/
+	return $templates;
     }
 }
 ?>
