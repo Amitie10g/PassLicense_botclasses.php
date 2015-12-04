@@ -102,7 +102,6 @@ with <input style="width:300px" type="text" name="withg" list="licenses_passed">
 <?php foreach($licenses_passed as $license){ ?>
 	<option value="<?= $license ?>">
 <?php } ?></datalist>
-<input type="checkbox" name="regg" novalidate value="true" />Regex</label></p>
 <?php
 		$num = 0;
 		foreach($categories as $page){
@@ -124,7 +123,7 @@ with <input style="width:300px" type="text" name="withg" list="licenses_passed">
 <div class="upload_details" id="<?= urlencode($page) ?>_details"> 
 <div style="margin:20px">
 	<div style="position:absolute;vertical-align:middle">
-		<h3>Select and replace tags (up to three)</h3>
+		<h3 style="margin:0 0 10px 0">Select and replace tags (up to three)</h3>
 		<div style="display:table-row">
 			<span style="display:table-cell">Replace:&nbsp;</span>
 			<span style="display:table-cell"><input style="width:300px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
@@ -175,11 +174,6 @@ with <input style="width:300px" type="text" name="withg" list="licenses_passed">
 				<option value="<?= $license ?>">
 <?php } ?>			</datalist>
 		</div>
-
-
-
-		<label><input type="checkbox" name="reg[<?= urlencode($page) ?>]" novalidate value="true" />Regex</label>
-
 	</div>
 	<div style="text-align:center">
 		<a href="<?= $site_url ?><?= urlencode($page) ?>">

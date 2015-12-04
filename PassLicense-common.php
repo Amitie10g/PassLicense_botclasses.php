@@ -85,11 +85,9 @@ if(isset($_GET['pass'])){
 		if(!empty($_POST['replace_3'][$page])) $replace[] = $_POST['replace_3'][$page];
 		if(!empty($_POST['with_3'][$page])) $with[] = $_POST['with_3'][$page];
 
-		if(!empty($_POST['regex'][$page])) $regex = $_POST['regex'][$page];
-
 		$page = str_replace(' ','_',urldecode($page));
 
-		$content = $wiki->replacestring($page,$replace,$with,$regex);
+		$content = $wiki->replacestring($page,$replace,$with);
 
 		$summary = 'License passed';
 		$result[] = $wiki->edit($page,$content,$summary);
