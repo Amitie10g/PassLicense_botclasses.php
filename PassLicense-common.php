@@ -29,6 +29,8 @@
 if(!defined('IN_PassLicense')) die();
 define('TEMP_PATH',realpath(sys_get_temp_dir()));
 
+session_start();
+
 $site_url = parse_url($project);
 $site_url = $site_url['scheme'].'://'.$site_url['host'].'/wiki/';
 
@@ -73,37 +75,47 @@ if(isset($_GET['pass'])){
 	if(empty($_POST['pagename'])) die('No data given');
 	
 	$pages = $_POST['pagename'];
+	$category = $_POST['category'];
 	
 	foreach($pages as $page){
-	
-		// Important: If you want to remove tags, DON'T pass null values (use at least a space)
-		// If the second or third 'with' is null, the value of the previous '' with will be used.
-		// This behaviour will be fixed in the next commit.
-		if(!empty($_POST['replace_1'][$page])) $replace[] = $_POST['replace_1'][$page];
-		if(!empty($_POST['with_1'][$page])) $with[] = $_POST['with_1'][$page];
+		if(!empty($_POST['replace_1'][$page])){
+			$replace[1] = $_POST['replace_1'][$page];
+			if(!empty($_POST['with_1'][$page])) $with[1] = $_POST['with_1'][$page];
+			else $with[1] = null;
+		}
 
-		if(!empty($_POST['replace_2'][$page])) $replace[] = $_POST['replace_2'][$page];
-		if(!empty($_POST['with_2'][$page])) $with[] = $_POST['with_2'][$page];
+		if(!empty($_POST['replace_2'][$page])){
+			$replace[2] = $_POST['replace_2'][$page];
+			if(!empty($_POST['with_2'][$page])) $with[2] = $_POST['with_2'][$page];
+			else $with[2] = null;
+		}
 
-		if(!empty($_POST['replace_3'][$page])) $replace[] = $_POST['replace_3'][$page];
-		if(!empty($_POST['with_3'][$page])) $with[] = $_POST['with_3'][$page];
+		if(!empty($_POST['replace_3'][$page])){
+			$replace[3] = $_POST['replace_3'][$page];
+			if(!empty($_POST['with_3'][$page])) $with[3] = $_POST['with_3'][$page];
+			else $with[3] = null;
+		}
+		
+		if(!empty($_POST['regex'][$page])) $regex = true;
 
 		$page = str_replace(' ','_',urldecode($page));
 
-		$content = $wiki->replacestring($page,$replace,$with);
+		$content = $wiki->replacestring($page,$replace,$with,$regex);
 
 		$summary = 'License passed';
 		$result[] = $wiki->edit($page,$content,$summary);
 	}
 
 	// This meanwhile I develop the page that contains the result.
-	var_dump($result);
-	echo '<p><a href="'.$_SERVER['PHP_SELF'].'">Return to home</a></p>';	
+	$_SESSION['result'] = $result;
+	header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
+	die();	
 }else{
 	if(!empty($_GET['category'])){
 		$category = $_GET['category'];
 		$categories = $wiki->categorymembers("Category:$category",50);
 	}	
 	require_once('check_files.tpl.php');
+	unset($_SESSION['result']);
 }
 ?>

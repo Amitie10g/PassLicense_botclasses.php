@@ -612,14 +612,28 @@ class wiki {
      * @param $page The page we're working with.
      * @param $string The string that you want to replace. (it can be a string or an array
      * @param $newstring The string that will replace the present string. (same as above)
+     * @param $regex If $string will be considered as a regular expression
      * @return the new text of page
      **/
-    function replacestring($page,$string,$newstring){
+    function replacestring($page,$string,$newstring,$regex=false){
         $data = $this->getpage($page);
-	if($data != false) $data = str_replace($string,$newstring,$data);
-	else $data = false;
-	
-	return $data;
+	if($data != false){
+		if(regex === true){
+			if(is_array($string) && is_array($newstring)){
+				foreach($string as $key=>$str){
+					$data = preg_replace($str,$newstring[$key],$data);
+				}
+
+			}elseif(is_string($string) && is_string($newstring)){
+				$data = preg_replace($newstring,$string,$data);
+			}else{
+				$data = false;
+			}
+		}else{
+			$data = str_replace($string,$newstring,$data);
+		}
+		return $data;
+	}
     }
     
     /**
@@ -628,15 +642,13 @@ class wiki {
      * @param $template The name of the template we are looking for
      * @return the searched (NULL if the template has not been found)
      **/
-    function gettemplate($page,$template) {
+    function gettemplate($page,$template){
        $data = $this->getpage($page);
        $template = preg_quote( $template, " " );
        $r = "/{{" . $template . "(?:[^{}]*(?:{{[^}]*}})?)+(?:[^}]*}})?/i";
        preg_match_all( $r, $data, $matches );
-       if( isset( $matches[0][0] ) )
-           return $matches[0][0];
-       else
-           return NULL;
+       if( isset( $matches[0][0])) return $matches[0][0];
+       else return null;
     }
 
 /**
@@ -663,16 +675,6 @@ class wiki {
 	$pattern_search = '/\{\{([\p{L}\p{N}\p{P}\|= ]*)+\}\}/';
 	preg_match_all($pattern_search,$content,$templates);
 	$templates = $templates[0];
-	/* For some reason, neither strpos() nor preg_match() got match for $tag against $template 
-	if(is_array($tags)){
-		foreach($templates as $template){
-			foreach($tags as $tag){
-				$match = strpos($tag,$template);
-				if($match > 0) $templates[] = $template;
-			}
-		}
-	}
-	*/
 	return $templates;
     }
 }

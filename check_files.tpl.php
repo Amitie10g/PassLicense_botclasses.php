@@ -86,6 +86,26 @@ if(!defined('IN_PassLicense')) die(); ?><html>
   
   <h1>PassLicense (botclasses.php)</h1>
 <div>
+
+<?php if(isset($_SESSION['result'])){ ?><div style="margin:10px">
+<?php	$result = $_SESSION['result'];
+	foreach($result as $key=>$item){
+		if($num%2 == 0)	$bg = 'DDD';
+		else $bg = 'EEE'; ?>
+<div style="background:#<?= $bg ?>;margin:auto;padding:5px">
+<?php if($item['edit']['result'] == 'Success') { ?><a href="<?= $site_url ?><?= $item['edit']['title'] ?>"><b><?= $item['edit']['title'] ?>:</b> Success</a><?php }else{ ?><b><?= $key ?>:</b> Error<?php } ?>
+<label class="collapse" for="<?= $key ?>_details">[Details]</label>
+<input id="<?= $key ?>_details" type="checkbox">
+<div class="upload_details" id="<?= $key ?>_details"> 
+<pre>
+<?= var_dump($item); ?>
+</pre>
+</div>
+</div>
+<?php $num++; } ?>
+</div>
+<?php } ?>
+
 <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>">
 <b>Enter a category:</b> <input style="width:300px" type="text" name="category" value="<?= $category ?>" list="categories" onchange="this.orm.submit();">
 <datalist id="categories">
@@ -96,12 +116,6 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </form>
 <?php if(!empty($_GET['category'])) { ?>
 <form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
-<p>Replace <input style="width:300px" type="text" name="replaceg">
-with <input style="width:300px" type="text" name="withg" list="licenses_passed"><label>
-<datalist id="licenses_passed">
-<?php foreach($licenses_passed as $license){ ?>
-	<option value="<?= $license ?>">
-<?php } ?></datalist>
 <?php
 		$num = 0;
 		foreach($categories as $page){
@@ -187,7 +201,7 @@ with <input style="width:300px" type="text" name="withg" list="licenses_passed">
 <div style="clear:both;font-size:0">&nbsp;</div>
 </div>
 <?php $num++; } ?>
-<p><input type="submit" value="Pass files"></p>
+<p><input type="hidden" name="category" value="<?= $_GET['category'] ?>"><input type="submit" value="Pass files"></p>
 </form>
 <?php } ?>
 </div>
