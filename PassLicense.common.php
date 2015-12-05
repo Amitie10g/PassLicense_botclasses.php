@@ -64,7 +64,7 @@ $categories_review = array('License_review_needed',
 			     'Lemill Web Albums files needing human review',
 			     'Unreviewed files from Bollywood Hungama');
 
-require_once('class.php');
+require_once('PassLicense.class.php');
 $wiki = new wiki($project);
 
 if(isset($_GET['pass'])){
@@ -115,7 +115,7 @@ if(isset($_GET['pass'])){
 		$category = $_GET['category'];
 		$categories = $wiki->categorymembers("Category:$category",50);
 	}	
-	require_once('check_files.tpl.php');
+	require_once('PassLicense.tpl.php');
 	unset($_SESSION['result']);
 }
 ?>

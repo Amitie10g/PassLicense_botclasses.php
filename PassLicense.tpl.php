@@ -109,8 +109,8 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 <form method="get" action="<?= $_SERVER['PHP_SELF'] ?>">
 <b>Enter a category:</b> <input style="width:300px" type="text" name="category" value="<?= $category ?>" list="categories" onchange="this.orm.submit();">
 <datalist id="categories">
-	<?php foreach($categories_review as $category){ ?>
-	<option value="<?= $category ?>">
+	<?php foreach($categories_review as $cat){ ?>
+	<option value="<?= $cat ?>">
 <?php } ?></datalist>
 <input type="submit">
 </form>
@@ -200,10 +200,10 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </div>
 <div style="clear:both;font-size:0">&nbsp;</div>
 </div>
-<?php $num++; } ?>
+<?php $num++; } if(!empty($categories)){ ?>
 <p><input type="hidden" name="category" value="<?= $_GET['category'] ?>"><input type="submit" value="Pass files"></p>
 </form>
-<?php } ?>
+<?php }else{ ?><p style="font-style:italic">No files in this category</p><?php } } ?>
 </div>
 </body>
 </html>

@@ -5,11 +5,7 @@ define('IN_PassLicense',true);
 // Edit the following as you need
 $user = '';
 $password = '';
-$project = ''; // https://commons.wikimedia.org/w/api.php
+$project = ''; // eg. https://commons.wikimedia.org/w/api.php
 
-// Default tag replacement. Please consider to use regular expressions. See bellow
-$replace = '';
-$with = '';
-
-require_once('PassLicense-common.php');
+require_once('PassLicense.common.php');
 ?>
