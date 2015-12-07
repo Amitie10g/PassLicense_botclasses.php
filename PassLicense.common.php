@@ -64,6 +64,10 @@ $categories_review = array('License_review_needed',
 			     'Lemill Web Albums files needing human review',
 			     'Unreviewed files from Bollywood Hungama');
 
+// The licenses ID not allowed in the wiki, according to
+// https://www.flickr.com/services/api/explore/flickr.photos.licenses.getInfo
+$flickr_licenses_blacklist = array(0,2,3,6,10);
+
 require_once('PassLicense.class.php');
 $wiki = new wiki($project);
 
@@ -113,7 +117,7 @@ if(isset($_GET['pass'])){
 }else{
 	if(!empty($_GET['category'])){
 		$category = $_GET['category'];
-		$categories = $wiki->categorymembers("Category:$category",50);
+		$categories = $wiki->categorymembers("Category:$category",250);
 	}	
 	require_once('PassLicense.tpl.php');
 	unset($_SESSION['result']);

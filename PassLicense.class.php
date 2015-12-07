@@ -36,9 +36,9 @@
  *
  *  Changes:
  *
- *    Class "wikimedia" renamed to "wiki"
+ *    Class "wikipedia" renamed to "wiki"
  *    Functions in Class "extended" merged into "wiki", to avoid issues
- *    Some functions modified
+ *    Some functions modified to accept more info
  *    Removed the echo statements. The classes should not output anything
  *    Removed parts commented intended for debugging purposes
  *    Removed several unneded functions
@@ -165,7 +165,7 @@ class wiki {
      * This is our constructor.
      * @return void
      **/
-    function __construct ($url='http://en.wikipedia.org/w/api.php',$hu=null,$hp=null) {
+    function __construct ($url='https://commons.wikimedia.org/w/api.php',$hu=null,$hp=null) {
         $this->http = new http;
         $this->token = null;
         $this->url = $url;
@@ -212,20 +212,18 @@ class wiki {
      * Sends a query to the api.
      * @param $query The query string.
      * @param $post POST data if its a post request (optional).
+     * @param $repeat How many times the request will be repeated
+     * @param $url The URL where we want to work (by default is the
+     * project where we're working, but can be any external site.
      * @return The api result.
      **/
-    function query ($query, $post=null, $repeat=0) {
-        if ($post==null) {
-            $ret = $this->http->get($this->url.$query);
-        } else {
-            $ret = $this->http->post($this->url.$query,$post);
-        }
-	if ($this->http->http_code() != "200") {
-		if ($repeat < 10) {
-			return $this->query($query,$post,++$repeat);
-		} else {
-			throw new Exception("HTTP Error " . $this->http->http_code() );
-		}
+    function query($query,$post=null,$repeat=0,$url=null){
+	if(empty($url)) $url = $this->url;
+        if($post==null) $ret = $this->http->get($url.$query);
+        else $ret = $this->http->post($url.$query,$post);
+	if($this->http->http_code() != "200"){
+		if($repeat < 10) return $this->query($query,$post,++$repeat);
+		else throw new Exception("HTTP Error " . $this->http->http_code() );
 	}
 	if( $this->echoRet ) {
 	    if( @unserialize( $ret ) === false ) {
@@ -285,32 +283,21 @@ class wiki {
      * @param $subcat (bool) Go into sub categories?
      * @return array
      **/
-    function categorymembers ($category,$limit=10,$subcat=false) {
+    function categorymembers ($category,$limit=10,$continue=null,$subcat=false) {
     
-        $continue = '';
-        $pages = array();
-        while (true) {
-            $res = $this->query('?action=query&list=categorymembers&cmtype=file&cmsort=timestamp&cmdir=desc&format=php&cmtitle='.urlencode($category).'&cmlimit='.$limit.$continue);
-            if (isset($x['error'])) {
-                return false;
-            }
-            foreach ($res['query']['categorymembers'] as $x) {
-                $pages[] = $x['title'];
-            }
-            if (empty($res['query-continue']['categorymembers']['cmcontinue'])) {
-                if ($subcat) {
-                    foreach ($pages as $p) {
-                        if (substr($p,0,9)=='Category:') {
-                            $pages2 = $this->categorymembers($p,true);
-                            $pages = array_merge($pages,$pages2);
-                        }
-                    }
-                }
-                return $pages;
-            } else {
-                $continue = '&cmcontinue='.urlencode($res['query-continue']['categorymembers']['cmcontinue']);
-            }
+	$res = $this->query('?action=query&list=categorymembers&cmtype=file&cmsort=timestamp&cmdir=newer&format=php&cmtitle='.urlencode($category).'&cmlimit='.$limit.$continue);
+            
+	if (isset($res['error'])) return false;
+    
+        foreach($res['query']['categorymembers'] as $page) {
+		$title = $page['title'];
+		// For a strange reason, "&cmtype=file&cmsort=timestamp" does not return File:-only reults
+		if(preg_match('/^(File:){1}[\p{L}\p{N}\p{P}\p{S}_ ]+$/',$title) >= 1) $pages[] = $title;
         }
+	
+	// Previous and Next page (aka. Continue in the MediaWiki API) rewriten, and in developement
+	// For now, the function will return just the members inside the limit of 250
+	return $pages;
     }
 
     /**
@@ -655,13 +642,15 @@ class wiki {
  *Functions added by me
  **/
  
-    function getThumbURL($page,$width=200){
-	$thumbnail = $this->query("?action=query&format=php&titles=$page&prop=imageinfo&&iiprop=url&iiurlwidth=$width");
-	
+    function getThumbURL($page,$width=null,$height=null){
+	if(empty($width)) $width = '2000';
+	if(empty($height)) $height = '2000';
+	$thumbnail = $this->query("?action=query&format=php&titles=$page&prop=imageinfo&iiprop=url&iiurlwidth=$width&iiurlheight=$height");
+
 	$thumbnail = $thumbnail['query']['pages'];
 	sort($thumbnail);
 	$thumbnail = $thumbnail[0]['imageinfo']['0']['thumburl'];
-	
+
 	return $thumbnail;
     }
 
@@ -676,6 +665,114 @@ class wiki {
 	preg_match_all($pattern_search,$content,$templates);
 	$templates = $templates[0];
 	return $templates;
+    }
+    
+    function getFlickrInfo($id,$api_key=null){
+	$url = "https://api.flickr.com/services/rest/";
+	$query = "?method=flickr.photos.getInfo&format=php_serial&api_key=$api_key&photo_id=$id";
+
+	$result = $this->query($query,null,null,$url);
+	
+	if($result['stat'] == 'ok') return $result;
+	else return false;
+    }
+    
+    function getFlickrLicense($id,$api_key=null){
+    	$url = "https://api.flickr.com/services/rest/";
+	$query = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$api_key";
+	
+	// Caching the Flickr licenses to avoid making unnecesary Flickr API calls
+	if(isset($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
+	else $result = $this->query($query,null,null,$url);
+	
+	if($result['stat'] == 'ok'){
+		$licenses = $result['licenses']['license'];
+
+		foreach($licenses as $license){
+			if($id == $license['id']){
+				$name = $license['name'];
+				break;
+			}
+		}
+		
+		if(!empty($name)) return $name;
+		else return false;
+		
+	}else return false;
+    }
+    
+    function getFlickrThumbURL($id,$api_key=null){
+	$url = "https://api.flickr.com/services/rest/";
+	$query = "?method=flickr.photos.getSizes&format=php_serial&api_key=$api_key&photo_id=$id";
+	
+	$result = $this->query($query,null,null,$url);
+
+	if($result['stat'] == 'ok'){
+		return $result['sizes']['size'][1]['source'];
+	}else return false;    
+    }
+
+    /**
+     * extract the Flickr photo ID from URL
+     * @param $url The URL to be parsed
+     * @return the numeric ID
+     **/
+    function getFlickrPhotoID($url){
+    
+	$id = explode('/',parse_url($url,PHP_URL_PATH));
+	$id = $id[3];
+	
+	return $id;
+    }
+    
+    /**
+     * Get information about external sources using their API (for now, only Flickr is supported,
+     * and requires a Flcikr API key. Support for more service is in developement
+     * @param $url The URL to be parsed
+     * @return the service, license, and the external thumbnail URL
+     **/
+    function getExternalInfo($url_g){
+	if(is_array($url_g)){
+		foreach($url_g as $url){
+			if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url) >= 1){
+				$url = $url;
+				$service = 'flickr';
+				break;
+			}
+		}
+	}else{
+		if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
+			$url = $url_g;
+			$service = 'flickr';
+		}
+	}
+	
+	if(empty($url)) return false;
+	
+	switch($service){
+		case 'flickr':
+			global $flickr_licenses_blacklist;
+			global $flickr_api_key;
+			$photo_id = $this->getFlickrPhotoID($url);
+			$photo_info = $this->getFlickrInfo($photo_id,$flickr_api_key);
+
+			if($photo_info['stat'] == 'ok'){
+				$photo_license = $photo_info['photo']['license'];
+ 
+				if(in_array($photo_license,$flickr_licenses_blacklist)) $license = 'blacklisted';
+				else{
+					$license = $this->getFlickrLicense($photo_license,$flickr_api_key);
+					$thumburl = $this->getFlickrThumbURL($photo_id,$flickr_api_key);
+				}
+				break;
+			}else{
+				$license = false;
+				return false;
+			} 
+		default: $license = false;
+	}
+
+	return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl);
     }
 }
 ?>

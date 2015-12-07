@@ -124,12 +124,20 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			$bg = 'DDD';
 			else $bg = 'EEE';
 		
-			$thumburl = $wiki->getThumbURL($page,300);
-			$content = $wiki->query("?action=parse&format=php&prop=text%7Cwikitext&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
-			$text = str_replace('<a','<a target="'.urlencode($page).'"',$content['parse']['text']['*']);
-			$wikitext = $content['parse']['wikitext']['*'];
-			$templates = $wiki->getTemplates($wikitext,$licenses);
-		
+			$content = $wiki->query("?action=parse&format=php&prop=text|wikitext|externallinks&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
+			
+			$external_links = $content['parse']['externallinks'];
+			$external_info = $wiki->getExternalInfo($external_links);
+			
+			if($external_info['license'] !== 'blacklisted'){
+
+				$wikitext = $content['parse']['wikitext']['*'];
+				$templates = $wiki->getTemplates($wikitext,$licenses);			
+				$thumburl = $wiki->getThumbURL($page,null,190);
+				$thumburl_big = $wiki->getThumbURL($page,600);
+				$external_thumburl = $external_info['thumburl'];
+				$text = str_replace('<a','<a target="'.urlencode($page).'"',$content['parse']['text']['*']);
+
 ?><div style="background:#<?= $bg ?>;margin:auto;padding:5px">
 <input style="float:left !important" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>" />
 <label style="float:left;font-weight:bold" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
@@ -189,18 +197,23 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 <?php } ?>			</datalist>
 		</div>
 	</div>
-	<div style="text-align:center;min-height:300px">
+	<div style="text-align:center;min-height:200px;margin:auto">
 		<a href="<?= $site_url ?><?= urlencode($page) ?>">
 		<img src="<?= $thumburl ?>"></a>
+		<div><a href="<?= $thumburl_big ?>" target="<?= $page ?>">Bigger</a> | <a target="_blank" href="https://www.google.com/searchbyimage?image_url=<?= $thumburl_big ?>">Google Image search</a></div>
 	</div>
+	
 	<div style="clear:both">&nbsp;</div>
-	<div style="border:2px #000 dotted;width:49%;height:450px;float:left;overflow:auto"><?= $text ?></div>
-	<iframe name="<?= urlencode($page) ?>" style="display:inline-table;border:2px #000 dotted;width:49%;height:450px;float:right"></iframe>
+	<div style="border:2px #000 dotted;width:49%;height:450px;float:left;overflow:auto">
+	<?php if(!empty($external_info['license'])){ ?><h3 style="margin:0 0 10px 0">License at external site: <?= $external_info['license'] ?></h3><?php } ?>
+	<?= $text ?>
+	</div>
+	<iframe name="<?= $page ?>" style="display:inline-table;border:2px #000 dotted;width:49%;height:450px;float:right"></iframe>
 </div>
 </div>
 <div style="clear:both;font-size:0">&nbsp;</div>
 </div>
-<?php $num++; } if(!empty($categories)){ ?>
+<?php $num++; } } if(!empty($categories)){ ?>
 <p><input type="hidden" name="category" value="<?= $_GET['category'] ?>"><input type="submit" value="Pass files"></p>
 </form>
 <?php }else{ ?><p style="font-style:italic">No files in this category</p><?php } } ?>

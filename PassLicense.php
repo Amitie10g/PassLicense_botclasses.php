@@ -6,6 +6,7 @@ define('IN_PassLicense',true);
 $user = '';
 $password = '';
 $project = ''; // eg. https://commons.wikimedia.org/w/api.php
+$flickr_api_key = ''; // Required to interact with the Flickr API
 
 require_once('PassLicense.common.php');
 ?>
