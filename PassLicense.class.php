@@ -1,13 +1,14 @@
 <?php
 /**
- * botclasses.php - Bot classes for interacting with mediawiki.
+ * botclasses.php - Bot classes for interacting with mediawiki - modified by Davod
  *
- *  (c) 2008-2012 Chris G - http://en.wikipedia.org/wiki/User:Chris_G
- *  (c) 2009-2010 Fale - http://en.wikipedia.org/wiki/User:Fale
- *  (c) 2010      Kaldari - http://en.wikipedia.org/wiki/User:Kaldari
- *  (c) 2011      Gutza - http://en.wikipedia.org/wiki/User:Gutza
- *  (c) 2012      Sean - http://en.wikipedia.org/wiki/User:SColombo
- *  (c) 2012      Brain - http://en.wikipedia.org/wiki/User:Brian_McNeil
+ *  (c) 2015		Davod	http://en.wikipedia.org/wiki/User:Amitie_10g
+ *  (c) 2008-2012	Chris G	http://en.wikipedia.org/wiki/User:Chris_G
+ *  (c) 2009-2010	Fale	http://en.wikipedia.org/wiki/User:Fale
+ *  (c) 2010		Kaldari	http://en.wikipedia.org/wiki/User:Kaldari
+ *  (c) 2011		Gutza	http://en.wikipedia.org/wiki/User:Gutza
+ *  (c) 2012		Sean	http://en.wikipedia.org/wiki/User:SColombo
+ *  (c) 2012		Brain	http://en.wikipedia.org/wiki/User:Brian_McNeil
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,10 +32,7 @@
  *      Gutza   - [[User:Gutza]]        - Submitted a patch for http->setHTTPcreds(), and http->quiet
  *      Sean    - [[User:SColombo]]     - Wrote the lyricwiki class (now moved to lyricswiki.php)
  *      Brain   - [[User:Brian_McNeil]] - Wrote wikipedia->getfileuploader() and wikipedia->getfilelocation
- *
- *  Modified by Davod <https://commons.wikimedia.org/wiki/User:Amitie 10g> and relicensed under the GNU GPLv3
- *
- *  Changes:
+ *	Davod   - [[User:Amitie_10g]]   - See bellow:
  *
  *    Class "wikipedia" renamed to "wiki"
  *    Functions in Class "extended" merged into "wiki", to avoid issues
@@ -43,6 +41,7 @@
  *    Removed parts commented intended for debugging purposes
  *    Removed several unneded functions
  *    Fixed the cURL issues with PHP5+
+ *    Added several functions to interact with external services like Flickr
  **/
 
 /**

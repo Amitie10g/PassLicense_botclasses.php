@@ -1,5 +1,4 @@
 <?php
-
 /**
  * PassLicense: botclases.php based MediaWiki for semiautomated license review
  *
