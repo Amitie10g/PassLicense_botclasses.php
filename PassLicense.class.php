@@ -646,8 +646,8 @@ class wiki {
      * @param $page The page that we're working
      * @param $props The properties that we want to obtain from the query
      * @return the contents as array
-     **/
-     function getPageContents($page,$props=null){
+    **/
+    function getPageContents($page,$props=null){
      
 	if(!empty($_SESSION['wiki_page_contents'][$page][$props])) $contents = $_SESSION['wiki_page_contents'][$page][$props];
 	else{
@@ -663,8 +663,8 @@ class wiki {
      * @param $width The desired width
      * @param $width The desired height
      * @return the URL as string
-     **/
-     function getThumbURL($page,$width=null,$height=null){
+    **/
+    function getThumbURL($page,$width=null,$height=null){
 	if(empty($width)) $width = '2000';
 	if(empty($height)) $height = '2000';
 
@@ -686,7 +686,7 @@ class wiki {
      * @param $content The contents we're working with
      * @param $tags The specific template tags what we want to match (not used for now)
      * @return the desired template tags as array
-     **/
+    **/
     function getTemplates($content,$tags=null){
 	$pattern_search = '/\{\{([\p{L}\p{N}\p{P}\|= ]*)+\}\}/';
 	preg_match_all($pattern_search,$content,$templates);
@@ -699,8 +699,8 @@ class wiki {
      * @param $id The Flickr License ID
      * @param $api_key The Flickr API key (required to interact with the Flickr API
      * @return the text of the given ID as string
-     **/
-     function getFlickrInfo($id,$api_key=null){
+    **/
+    function getFlickrInfo($id,$api_key=null){
 	if(!empty($_SESSION['flickr_info'][$id])) $result = $_SESSION['flickr_info'][$id];
 	else{
 		$url = "https://api.flickr.com/services/rest/";
@@ -718,8 +718,8 @@ class wiki {
      * @param $id The Flickr ID of the file
      * @param $api_key The Flickr API key (required to interact with the Flickr API
      * @return the license text as array
-     **/
-     function getFlickrLicense($id,$api_key=null){
+    **/
+    function getFlickrLicense($id,$api_key=null){
 	if(!empty($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
 	else{
 		$url = "https://api.flickr.com/services/rest/";
@@ -768,7 +768,7 @@ class wiki {
      * Extract the Flickr photo ID from URL
      * @param $url The URL to be parsed
      * @return the numeric ID as string
-     **/
+    **/
     function getFlickrPhotoID($url){
 	$id = explode('/',parse_url($url,PHP_URL_PATH));
 	$id = $id[3];
@@ -781,8 +781,8 @@ class wiki {
      * and requires a Flickr API key. Support for more service is in developement)
      * @param $url The URL to be parsed
      * @return the service, license, and the external thumbnail URL as array
-     **/
-     function getExternalInfo($url_g){
+    **/
+    function getExternalInfo($url_g){
 	if(is_array($url_g)){
 		foreach($url_g as $url){
 			if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url) >= 1){
@@ -827,17 +827,15 @@ class wiki {
 
 	return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl,'url'=>$photo_url);
     }
-    
-    
+
     /**
      * Get the closest number present in an array against an arbitrary number
-     * Credits to "Tim Cooper" at StackOverflow: http://stackoverflow.com/users/142162/tim-cooper
-     * @param $haystack The Uarbithary number where find it
+     * Credits to "Tim Cooper" at Stack Overflow: http://stackoverflow.com/users/142162/tim-cooper
+     * @param $haystack The arbithary number where find it
      * @param $needle The array with the values to get the closest one
      * @param $use_key To return the array key instead of its value
-     * @param $allow_greater To allow if the closest value cam be greater than the $haystack
      * @return the closest value or key
-     **/
+    **/
     function bestFit($haystack,$needle,$use_key=false) {
 	$closest = null;
 		foreach ($needle as $key=>$item) {
@@ -847,7 +845,7 @@ class wiki {
 			}
 		}
 	return $closest;
-}
+    }
     
 }
 ?>
