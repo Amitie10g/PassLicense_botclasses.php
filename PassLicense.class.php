@@ -741,7 +741,14 @@ class wiki {
 		
 	}else return false;
     }
-    
+
+    /**
+     * Get the thumbnail of a Flickr file using its ID
+     * @param $id The Flickr file ID
+     * @param $api_key The Flickr API key (required to interact with the Flickr API)
+     * @param $max_height = The maximum desired height
+     * @return the numeric ID as string
+    **/   
     function getFlickrThumbURL($id,$api_key=null,$max_height=200){
 	if(!empty($_SESSION['flickr_thumburl'][$id])) $result = $_SESSION['flickr_thumburl'][$id];
 	else{
@@ -846,6 +853,5 @@ class wiki {
 		}
 	return $closest;
     }
-    
 }
 ?>
