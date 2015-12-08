@@ -124,16 +124,19 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			$bg = 'DDD';
 			else $bg = 'EEE';
 		
-			$content = $wiki->query("?action=parse&format=php&prop=text|wikitext|externallinks&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
+			$content = $wiki->GetPageContents($page,"text|wikitext|externallinks");
 			
 			$external_links = $content['parse']['externallinks'];
 			$external_info = $wiki->getExternalInfo($external_links);
+			$external_license = $external_info['license'];
 			
-			if($external_info['license'] !== 'blacklisted'){
+			if($external_license !== 'blacklisted'){
 
 				$wikitext = $content['parse']['wikitext']['*'];
 				$templates = $wiki->getTemplates($wikitext,$licenses);			
 				$thumburl = $wiki->getThumbURL($page,null,190);
+				$photo_url = $external_info['url'];
+				$external_service = $external_info['service'];
 				$thumburl_big = $wiki->getThumbURL($page,600);
 				$external_thumburl = $external_info['thumburl'];
 				$text = str_replace('<a','<a target="'.urlencode($page).'"',$content['parse']['text']['*']);
@@ -198,14 +201,20 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		</div>
 	</div>
 	<div style="text-align:center;min-height:200px;margin:auto">
-		<a href="<?= $site_url ?><?= urlencode($page) ?>">
-		<img src="<?= $thumburl ?>"></a>
-		<div><a href="<?= $thumburl_big ?>" target="<?= $page ?>">Bigger</a> | <a target="_blank" href="https://www.google.com/searchbyimage?image_url=<?= $thumburl_big ?>">Google Image search</a></div>
+		<div style="display:inline-table">
+			<a href="<?= $site_url ?><?= urlencode($page) ?>">
+			<img src="<?= $thumburl ?>"></a>
+			<div><a href="<?= $thumburl_big ?>" target="<?= $page ?>">Bigger</a> | <a target="_blank" href="https://www.google.com/searchbyimage?image_url=<?= $thumburl_big ?>">Google Image search</a></div>
+		</div>
+		<?php if(!empty($external_thumburl)){ ?><div style="display:inline-table">
+			<a href="<?= $photo_url ?>" target="<?= $page ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
+			<div>Picture found at <?= ucfirst($external_service) ?></div>
+		</div><?php } ?>
 	</div>
 	
 	<div style="clear:both">&nbsp;</div>
 	<div style="border:2px #000 dotted;width:49%;height:450px;float:left;overflow:auto">
-	<?php if(!empty($external_info['license'])){ ?><h3 style="margin:0 0 10px 0">License at external site: <?= $external_info['license'] ?></h3><?php } ?>
+	<?php if(!empty($external_license)){ ?><h3 style="margin:0 0 10px 0">License at external site: <?= $external_license ?></h3><?php } ?>
 	<?= $text ?>
 	</div>
 	<iframe name="<?= $page ?>" style="display:inline-table;border:2px #000 dotted;width:49%;height:450px;float:right"></iframe>

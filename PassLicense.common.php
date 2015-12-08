@@ -26,6 +26,7 @@
  *  Any contributions is welcome.
  *
  **/
+
 if(!defined('IN_PassLicense')) die();
 define('TEMP_PATH',realpath(sys_get_temp_dir()));
 
@@ -114,11 +115,17 @@ if(isset($_GET['pass'])){
 	$_SESSION['result'] = $result;
 	header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
 	die();	
+}elseif(isset($_GET['clear_cache'])){
+	$category = $_GET['category'];
+	session_destroy();
+	header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
+	die();
 }else{
 	if(!empty($_GET['category'])){
 		$category = $_GET['category'];
 		$categories = $wiki->categorymembers("Category:$category",250);
-	}	
+	}
+	
 	require_once('PassLicense.tpl.php');
 	unset($_SESSION['result']);
 }

@@ -213,8 +213,7 @@ class wiki {
      * @param $query The query string.
      * @param $post POST data if its a post request (optional).
      * @param $repeat How many times the request will be repeated
-     * @param $url The URL where we want to work (by default is the
-     * project where we're working, but can be any external site.
+     * @param $url The URL where we want to work (for external services API)
      * @return The api result.
      **/
     function query($query,$post=null,$repeat=0,$url=null){
@@ -639,26 +638,54 @@ class wiki {
     }
 
 /**
- *Functions added by me
+ * Functions added by me
  **/
- 
-    function getThumbURL($page,$width=null,$height=null){
-	if(empty($width)) $width = '2000';
-	if(empty($height)) $height = '2000';
-	$thumbnail = $this->query("?action=query&format=php&titles=$page&prop=imageinfo&iiprop=url&iiurlwidth=$width&iiurlheight=$height");
 
-	$thumbnail = $thumbnail['query']['pages'];
-	sort($thumbnail);
-	$thumbnail = $thumbnail[0]['imageinfo']['0']['thumburl'];
-
-	return $thumbnail;
+    /**
+     * Get the contents from the Wiki in several formats, using the MediaWiki API
+     * @param $page The page that we're working
+     * @param $props The properties that we want to obtain from the query
+     * @return the contents as array
+     **/
+     function getPageContents($page,$props=null){
+     
+	if(!empty($_SESSION['wiki_page_contents'][$page][$props])) $contents = $_SESSION['wiki_page_contents'][$page][$props];
+	else{
+		$contents = $this->query("?action=parse&format=php&prop=$props&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
+		$_SESSION['wiki_page_contents'][$page][$props] = $contents;
+	}	
+	return $contents;
     }
 
     /**
-     * Get the template tags with its parameters from a page (in wikitext format)
+     * Get the URL of the thumbnail of a File
+     * @param $page The page in File: namespace that we want to get the URL
+     * @param $width The desired width
+     * @param $width The desired height
+     * @return the URL as string
+     **/
+     function getThumbURL($page,$width=null,$height=null){
+	if(empty($width)) $width = '2000';
+	if(empty($height)) $height = '2000';
+
+	if(!empty($_SESSION['thumburl'][$page][$width.'_'.$height])) $thumburl = $_SESSION['thumburl'][$page][$width.'_'.$height];
+	else{
+		$thumburl = $this->query("?action=query&format=php&titles=$page&prop=imageinfo&iiprop=url&iiurlwidth=$width&iiurlheight=$height");
+
+		$thumburl = $thumburl['query']['pages'];
+		sort($thumburl);
+		$thumburl = $thumburl[0]['imageinfo']['0']['thumburl'];
+
+		$_SESSION['thumburl'][$page][$width.'_'.$height] = $thumburl;
+	}
+	return $thumburl;
+    }
+
+    /**
+     * Get the template tags from the given page, with its parameters (everything between {{}})
      * @param $content The contents we're working with
-     * @param $tags The specific template tags what we want to match
-     * @return the searched (NULL if no tag has not been found)
+     * @param $tags The specific template tags what we want to match (not used for now)
+     * @return the desired template tags as array
      **/
     function getTemplates($content,$tags=null){
 	$pattern_search = '/\{\{([\p{L}\p{N}\p{P}\|= ]*)+\}\}/';
@@ -666,25 +693,40 @@ class wiki {
 	$templates = $templates[0];
 	return $templates;
     }
-    
-    function getFlickrInfo($id,$api_key=null){
-	$url = "https://api.flickr.com/services/rest/";
-	$query = "?method=flickr.photos.getInfo&format=php_serial&api_key=$api_key&photo_id=$id";
 
-	$result = $this->query($query,null,null,$url);
-	
+    /**
+     * Get useful information from a Flickr file using the Flickr API
+     * @param $id The Flickr License ID
+     * @param $api_key The Flickr API key (required to interact with the Flickr API
+     * @return the text of the given ID as string
+     **/
+     function getFlickrInfo($id,$api_key=null){
+	if(!empty($_SESSION['flickr_info'][$id])) $result = $_SESSION['flickr_info'][$id];
+	else{
+		$url = "https://api.flickr.com/services/rest/";
+		$query = "?method=flickr.photos.getInfo&format=php_serial&api_key=$api_key&photo_id=$id";
+		$result = $this->query($query,null,null,$url);
+		$_SESSION['flickr_info'][$id] = $result;
+	}
+
 	if($result['stat'] == 'ok') return $result;
 	else return false;
     }
-    
-    function getFlickrLicense($id,$api_key=null){
-    	$url = "https://api.flickr.com/services/rest/";
-	$query = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$api_key";
-	
-	// Caching the Flickr licenses to avoid making unnecesary Flickr API calls
-	if(isset($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
-	else $result = $this->query($query,null,null,$url);
-	
+
+    /**
+     * Get the license text from a Flickr License ID
+     * @param $id The Flickr ID of the file
+     * @param $api_key The Flickr API key (required to interact with the Flickr API
+     * @return the license text as array
+     **/
+     function getFlickrLicense($id,$api_key=null){
+	if(!empty($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
+	else{
+		$url = "https://api.flickr.com/services/rest/";
+		$query = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$api_key";
+		$result = $this->query($query,null,null,$url);
+		$_SESSION['flickr_licenses'] = $result;
+	}
 	if($result['stat'] == 'ok'){
 		$licenses = $result['licenses']['license'];
 
@@ -694,44 +736,53 @@ class wiki {
 				break;
 			}
 		}
-		
 		if(!empty($name)) return $name;
 		else return false;
 		
 	}else return false;
     }
     
-    function getFlickrThumbURL($id,$api_key=null){
-	$url = "https://api.flickr.com/services/rest/";
-	$query = "?method=flickr.photos.getSizes&format=php_serial&api_key=$api_key&photo_id=$id";
+    function getFlickrThumbURL($id,$api_key=null,$max_height=200){
+	if(!empty($_SESSION['flickr_thumburl'][$id])) $result = $_SESSION['flickr_thumburl'][$id];
+	else{
+		$url = "https://api.flickr.com/services/rest/";
+		$query = "?method=flickr.photos.getSizes&format=php_serial&api_key=$api_key&photo_id=$id";
+		$result = $this->query($query,null,null,$url);
+		$_SESSION['flickr_thumburl'][$id] = $result;
+	}
 	
-	$result = $this->query($query,null,null,$url);
-
 	if($result['stat'] == 'ok'){
-		return $result['sizes']['size'][1]['source'];
+		$get_sizes = $result['sizes']['size'];
+		
+		foreach($get_sizes as $size){
+			$sizes[] = $size['height'];
+		}
+		
+		$best_fit = $this->bestFit($max_height,$sizes,true);
+	
+		return $get_sizes[$best_fit]['source'];
 	}else return false;    
     }
 
     /**
-     * extract the Flickr photo ID from URL
+     * Extract the Flickr photo ID from URL
      * @param $url The URL to be parsed
-     * @return the numeric ID
+     * @return the numeric ID as string
      **/
     function getFlickrPhotoID($url){
-    
 	$id = explode('/',parse_url($url,PHP_URL_PATH));
 	$id = $id[3];
-	
+
 	return $id;
     }
-    
+
     /**
      * Get information about external sources using their API (for now, only Flickr is supported,
-     * and requires a Flcikr API key. Support for more service is in developement
+     * and requires a Flickr API key. Support for more service is in developement)
      * @param $url The URL to be parsed
-     * @return the service, license, and the external thumbnail URL
+     * @return the service, license, and the external thumbnail URL as array
      **/
-    function getExternalInfo($url_g){
+     function getExternalInfo($url_g){
 	if(is_array($url_g)){
 		foreach($url_g as $url){
 			if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url) >= 1){
@@ -753,12 +804,14 @@ class wiki {
 		case 'flickr':
 			global $flickr_licenses_blacklist;
 			global $flickr_api_key;
+			
 			$photo_id = $this->getFlickrPhotoID($url);
 			$photo_info = $this->getFlickrInfo($photo_id,$flickr_api_key);
 
 			if($photo_info['stat'] == 'ok'){
 				$photo_license = $photo_info['photo']['license'];
- 
+				$photo_url = $photo_info['photo']['urls']['url'][0]['_content'];
+
 				if(in_array($photo_license,$flickr_licenses_blacklist)) $license = 'blacklisted';
 				else{
 					$license = $this->getFlickrLicense($photo_license,$flickr_api_key);
@@ -772,7 +825,29 @@ class wiki {
 		default: $license = false;
 	}
 
-	return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl);
+	return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl,'url'=>$photo_url);
     }
+    
+    
+    /**
+     * Get the closest number present in an array against an arbitrary number
+     * Credits to "Tim Cooper" at StackOverflow: http://stackoverflow.com/users/142162/tim-cooper
+     * @param $haystack The Uarbithary number where find it
+     * @param $needle The array with the values to get the closest one
+     * @param $use_key To return the array key instead of its value
+     * @param $allow_greater To allow if the closest value cam be greater than the $haystack
+     * @return the closest value or key
+     **/
+    function bestFit($haystack,$needle,$use_key=false) {
+	$closest = null;
+		foreach ($needle as $key=>$item) {
+			if ($closest === null || (abs($haystack - $closest) > abs($item - $haystack) && $item <= $haystack)) {
+				if($use_key === true) $closest = $key;
+				else $closest = $item;
+			}
+		}
+	return $closest;
+}
+    
 }
 ?>
