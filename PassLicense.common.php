@@ -34,6 +34,7 @@ session_start();
 $site_url = parse_url($project);
 $site_url = $site_url['scheme'].'://'.$site_url['host'].'/wiki/';
 
+// License tags to search
 $licenses_search = array('LicenseReview',
 			 'Flickrreview',
 			 'picasareview',
@@ -41,7 +42,8 @@ $licenses_search = array('LicenseReview',
 			 'OpenStreetMapreview',
 			 'Indian navy');
 
-$licenses_passed = array('{{subst:Lrw|<site>}}',
+// License tags to replace
+$licenses_passed = array('{{subst:Lrw|site=<site>}}',
 			 '{{subst:Frw}}',
 			 '{{Cc-by-3.0-BollywoodHungama|status=confirmed|reviewer=~~~}}',
 			 '{{picasareview|{{subst:REVISIONUSER}}|~~~~~}}',
@@ -50,6 +52,7 @@ $licenses_passed = array('{{subst:Lrw|<site>}}',
 			 '{{Indian navy|status=confirmed|reviewer=~~~}}',
 			 '{{Cc-by-sa-3.0-FilmiTadka|passed|~~~}}');
 
+// Categories to list (without the Category: prefix)
 $categories_review = array('License_review_needed',
 			     'Flickr images needing human review',
 			     'Filmitadka review needed',
@@ -106,14 +109,14 @@ if(isset($_GET['pass'])){
 
 		$content = $wiki->replacestring($page,$replace,$with,$regex);
 
-		$summary = 'License passed';
+		$summary = 'License passed (using PassLicense)';
 		$result[] = $wiki->edit($page,$content,$summary);
 	}
 
-	// This meanwhile I develop the page that contains the result.
 	$_SESSION['result'] = $result;
 	header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
 	die();	
+
 }elseif(isset($_GET['clear_cache'])){
 	$category = $_GET['category'];
 	session_destroy();
@@ -122,7 +125,7 @@ if(isset($_GET['pass'])){
 }else{
 	if(!empty($_GET['category'])){
 		$category = $_GET['category'];
-		$categories = $wiki->categorymembers("Category:$category",250);
+		$pages = $wiki->categorymembers("Category:$category",250);
 	}
 	
 	require_once('PassLicense.tpl.php');

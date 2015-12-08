@@ -50,8 +50,9 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		width:300px;
 	}
 	.upload_details{
-		padding:10px;
-		font-size:10pt
+		padding:5px;
+		margin:20px 0 0 0;
+		font-size:10pt;
 	}
 	.collapse{
 		cursor:pointer;
@@ -111,13 +112,14 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	<?php foreach($categories_review as $cat){ ?>
 	<option value="<?= $cat ?>">
 <?php } ?></datalist>
-<input type="submit">
+<input type="submit" value="&#8811;">
 </form>
-<?php if(!empty($_GET['category'])) { ?>
+<?php if(!empty($_GET['category'])){ ?>
 <form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
 <?php
+	if(!empty($pages)){
 		$num = 0;
-		foreach($categories as $page){
+		foreach($pages as $page){
 			$page = str_replace(' ','_',$page);
 			if($num%2 == 0)
 			$bg = 'DDD';
@@ -128,8 +130,10 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			$external_links = $content['parse']['externallinks'];
 			$external_info = $wiki->getExternalInfo($external_links);
 			$external_license = $external_info['license'];
-			
-			if($external_license !== 'blacklisted'){
+			$allowed = $external_info['allowed'];
+
+			// Hide results from unallowed licenses, or show them by passing parameter
+			if($allowed !== false || isset($_GET['show_blacklisted'])){
 
 				$wikitext = $content['parse']['wikitext']['*'];
 				$templates = $wiki->getTemplates($wikitext,$licenses);			
@@ -145,84 +149,93 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 <label style="float:left;font-weight:bold" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
 <input id="<?= urlencode($page) ?>_details" type="checkbox" />
 <div class="upload_details" id="<?= urlencode($page) ?>_details"> 
-<div style="margin:20px">
-	<div style="position:absolute;vertical-align:middle">
-		<h3 style="margin:0 0 10px 0">Select and replace tags (up to three)</h3>
-		<div style="display:table-row">
-			<span style="display:table-cell">Replace:&nbsp;</span>
-			<span style="display:table-cell"><input style="width:300px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
-			<datalist id="tags_<?= urlencode($page) ?>">
-<?php foreach($templates as $template){ ?>
-				<option value="<?= $template ?>">;
-<?php } ?>			</datalist>
-		</div>
-		<div style="display:table-row">
-			<span style="display:table-cell">With:&nbsp;</span>
-			<span style="display:table-cell"><input style="width:300px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
-			<datalist id="licenses_passed">
-<?php foreach($licenses_passed as $license){ ?>
-				<option value="<?= $license ?>">
-<?php } ?>			</datalist>
-		</div>
-		<div>&nbsp;</div>
-		<div style="display:table-row">
-			<span style="display:table-cell">Replace:&nbsp;</span>
-			<span style="display:table-cell"><input style="width:300px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
-			<datalist id="tags_<?= urlencode($page) ?>">
-<?php foreach($templates as $template){ ?>
-				<option value="<?= $template ?>">;
-<?php } ?>			</datalist>
-		</div>
-		<div style="display:table-row">
-			<span style="display:table-cell">With:&nbsp;</span>
-			<span style="display:table-cell"><input style="width:300px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
-			<datalist id="licenses_passed">
-<?php foreach($licenses_passed as $license){ ?>
-				<option value="<?= $license ?>">
-<?php } ?>			</datalist>
-		</div>
-		<div>&nbsp;</div>
-		<div style="display:table-row">
-			<span style="display:table-cell">Replace:&nbsp;</span>
-			<span style="display:table-cell"><input style="width:300px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
-			<datalist id="tags_<?= urlencode($page) ?>">
-<?php foreach($templates as $template){ ?>
-				<option value="<?= $template ?>">;
-<?php } ?>			</datalist>
-		</div>
-		<div style="display:table-row">
-			<span style="display:table-cell">With:&nbsp;</span>
-			<span style="display:table-cell"><input style="width:300px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
-			<datalist id="licenses_passed">
-<?php foreach($licenses_passed as $license){ ?>
-				<option value="<?= $license ?>">
-<?php } ?>			</datalist>
-		</div>
-	</div>
 	<div style="text-align:center;min-height:200px;margin:auto">
 		<div style="display:inline-table">
 			<a href="<?= $site_url ?><?= urlencode($page) ?>">
 			<img src="<?= $thumburl ?>"></a>
-			<div><a href="<?= $thumburl_big ?>" target="<?= $page ?>">Bigger</a> | <a target="_blank" href="https://www.google.com/searchbyimage?image_url=<?= $thumburl_big ?>">Google Image search</a></div>
+			<div><a href="<?= $thumburl_big ?>" target="<?= urlencode($page) ?>">Bigger</a> | <a target="_blank" href="https://www.google.com/searchbyimage?image_url=<?= $thumburl_big ?>">Google Image search</a></div>
 		</div>
 		<?php if(!empty($external_thumburl)){ ?><div style="display:inline-table">
-			<a href="<?= $photo_url ?>" target="<?= $page ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
-			<div>Picture found at <?= ucfirst($external_service) ?></div>
+			<a href="<?= $photo_url ?>" target="<?= urlencode($page) ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
+			<div>Picture found at <?= ucfirst($external_service) ?>
+			<?php if(!empty($external_license)){ ?>(<?= $external_license ?>)<?php } ?></div>
 		</div><?php } ?>
 	</div>
 	
-	<div style="clear:both">&nbsp;</div>
+	
+	
+	
+	<div style="padding:10px;vertical-align:middle;width:1060px;margin:auto">
+		<div style="display:table-cell;padding:5px">
+			<div style="display:table-row">
+				<span style="display:table-cell">Replace:&nbsp;</span>
+				<span style="display:table-cell"><input style="width:300px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<datalist id="tags_<?= urlencode($page) ?>">
+	<?php foreach($templates as $template){ ?>
+					<option value="<?= $template ?>">;
+	<?php } ?>			</datalist>
+			</div>
+			<div style="display:table-row">
+				<span style="display:table-cell">With:&nbsp;</span>
+				<span style="display:table-cell"><input style="width:300px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<datalist id="licenses_passed">
+	<?php foreach($licenses_passed as $license){ ?>
+					<option value="<?= $license ?>">
+	<?php } ?>			</datalist>
+			</div>
+		
+		</div>
+		<div style="display:table-cell;padding:5px">
+			<div style="display:table-row">
+				<span style="display:table-cell">Replace:&nbsp;</span>
+				<span style="display:table-cell"><input style="width:300px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<datalist id="tags_<?= urlencode($page) ?>">
+	<?php foreach($templates as $template){ ?>
+					<option value="<?= $template ?>">;
+	<?php } ?>			</datalist>
+			</div>
+			<div style="display:table-row">
+				<span style="display:table-cell">With:&nbsp;</span>
+				<span style="display:table-cell"><input style="width:300px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<datalist id="licenses_passed">
+	<?php foreach($licenses_passed as $license){ ?>
+					<option value="<?= $license ?>">
+	<?php } ?>			</datalist>
+			</div>
+		
+		</div>
+		<div style="display:table-cell;padding:5px">
+			<div style="display:table-row">
+				<span style="display:table-cell">Replace:&nbsp;</span>
+				<span style="display:table-cell"><input style="width:300px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<datalist id="tags_<?= urlencode($page) ?>">
+	<?php foreach($templates as $template){ ?>
+					<option value="<?= $template ?>">;
+	<?php } ?>			</datalist>
+			</div>
+			<div style="display:table-row">
+				<span style="display:table-cell">With:&nbsp;</span>
+				<span style="display:table-cell"><input style="width:300px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<datalist id="licenses_passed">
+	<?php foreach($licenses_passed as $license){ ?>
+					<option value="<?= $license ?>">
+	<?php } ?>			</datalist>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	
 	<div style="border:2px #000 dotted;width:49%;height:450px;float:left;overflow:auto">
-	<?php if(!empty($external_license)){ ?><h3 style="margin:0 0 10px 0">License at external site: <?= $external_license ?></h3><?php } ?>
 	<?= $text ?>
 	</div>
-	<iframe name="<?= $page ?>" style="display:inline-table;border:2px #000 dotted;width:49%;height:450px;float:right"></iframe>
-</div>
+	<iframe name="<?= urlencode($page) ?>" style="display:inline-table;border:2px #000 dotted;width:49%;height:450px;float:right"></iframe>
 </div>
 <div style="clear:both;font-size:0">&nbsp;</div>
 </div>
-<?php $num++; } } if(!empty($categories)){ ?>
-<p><input type="hidden" name="category" value="<?= $_GET['category'] ?>"><input type="submit" value="Pass files"></p>
+<?php $num++; } } ?>
+<p><input type="hidden" name="category" value="<?= $_GET['category'] ?>"><input type="submit" value="Pass files &#8811;"></p>
 </form>
 <?php }else{ ?><p style="font-style:italic">No files in this category</p><?php } } ?>
 </div>

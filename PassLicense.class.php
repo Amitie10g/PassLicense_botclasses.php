@@ -818,20 +818,19 @@ class wiki {
 				$photo_license = $photo_info['photo']['license'];
 				$photo_url = $photo_info['photo']['urls']['url'][0]['_content'];
 
-				if(in_array($photo_license,$flickr_licenses_blacklist)) $license = 'blacklisted';
-				else{
-					$license = $this->getFlickrLicense($photo_license,$flickr_api_key);
-					$thumburl = $this->getFlickrThumbURL($photo_id,$flickr_api_key);
-				}
-				break;
+				if(in_array($photo_license,$flickr_licenses_blacklist)) $allowed = false;
+
+				$license = $this->getFlickrLicense($photo_license,$flickr_api_key);
+				$thumburl = $this->getFlickrThumbURL($photo_id,$flickr_api_key);
 			}else{
 				$license = false;
 				return false;
-			} 
+			}
+			break;
 		default: $license = false;
 	}
 
-	return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl,'url'=>$photo_url);
+	return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl,'url'=>$photo_url,'allowed'=>$allowed);
     }
 
     /**
