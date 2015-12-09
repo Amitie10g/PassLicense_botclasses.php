@@ -71,6 +71,9 @@ $categories_review = array('License_review_needed',
 // https://www.flickr.com/services/api/explore/flickr.photos.licenses.getInfo
 $flickr_licenses_blacklist = array(0,2,3,6,10);
 
+// Same as above, for Ipernity. See http://www.ipernity.com/help/api/method/doc.setLicense
+$ipernity_licenses_blacklist = array(0,3,5,7,11);
+
 require_once('PassLicense.class.php');
 $wiki = new wiki($project);
 

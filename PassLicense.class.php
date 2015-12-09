@@ -639,6 +639,10 @@ class wiki {
 /**
  * Functions added by me
  **/
+ 
+ /**
+ * MediaWiki
+ **/
 
     /**
      * Get the contents from the Wiki in several formats, using the MediaWiki API
@@ -692,6 +696,112 @@ class wiki {
 	$templates = $templates[0];
 	return $templates;
     }
+    
+    /**
+     * Get information about external sources using their API (for now, only Flickr is supported,
+     * and requires a Flickr API key. Support for more service is in developement)
+     * @param $url The URL to be parsed
+     * @return the service, license, and the external thumbnail URL as array
+    **/
+    function getExternalInfo($url_g){
+	if(is_array($url_g)){
+		foreach($url_g as $url){
+			if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url) >= 1){
+				$url = $url;
+				$service = 'flickr';
+				break;
+			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(ipernity\.com\/doc\/){1}[\w@]+\/[\w@]+/',$url) >= 1){
+				$url = $url;
+				$service = 'ipernity';
+				break;
+			}
+			
+		}
+	}else{
+		if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
+			$url = $url_g;
+			$service = 'flickr';
+		}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(ipernity\.com\/doc\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
+			$url = $url_g;
+			$service = 'flickr';
+		}
+	}
+	
+	if(empty($url)) return false;
+	
+	switch($service){
+		case 'flickr':
+			global $flickr_licenses_blacklist;
+			global $flickr_api_key;
+			
+			$photo_id = $this->getFlickrPhotoID($url);
+			$photo_info = $this->getFlickrInfo($photo_id,$flickr_api_key);
+
+			if($photo_info['stat'] == 'ok'){
+				$photo_license = $photo_info['photo']['license'];
+				$photo_url = $photo_info['photo']['urls']['url'][0]['_content'];
+
+				if(in_array($photo_license,$flickr_licenses_blacklist)) $allowed = false;
+
+				$license = $this->getFlickrLicense($photo_license,$flickr_api_key);
+				$thumburl = $this->getFlickrThumbURL($photo_id,$flickr_api_key);
+			}else{
+				$license = false;
+				return false;
+			}
+			break;
+		
+		
+		case 'ipernity':
+			global $ipernity_licenses_blacklist;
+			global $ipernity_api_key;
+			
+			$photo_id = $this->getFlickrPhotoID($url);
+			$photo_info = $this->getIpernityInfo($photo_id,$ipernity_api_key);
+
+			if($photo_info['api']['status'] == 'ok'){
+				$photo_license = $photo_info['doc']['license'];
+				if(in_array($photo_license,$ipernity_licenses_blacklist)) $allowed = false;
+				$license = $this->getIpernityLicense($photo_license);				
+				$thumburl = $this->getIpernityThumbURL($photo_info['doc']['thumbs']['thumb'],200);
+				$photo_url = $photo_info['doc']['link'];
+			}else{
+				$license = false;
+				return false;
+			}
+			break;
+		
+			
+		
+		
+		default: $license = false;
+	}
+
+	return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl,'url'=>$photo_url,'allowed'=>$allowed);
+    }
+
+    /**
+     * Get the closest number present in an array against an arbitrary number
+     * Credits to "Tim Cooper" at Stack Overflow: http://stackoverflow.com/users/142162/tim-cooper
+     * @param $haystack The arbithary number where find it
+     * @param $needle The array with the values to get the closest one
+     * @param $use_key To return the array key instead of its value
+     * @return the closest value or key
+    **/
+    function bestFit($haystack,$needle,$use_key=false) {
+	$closest = null;
+		foreach ($needle as $key=>$item) {
+			if ($closest === null || (abs($haystack - $closest) > abs($item - $haystack) && $item <= $haystack)) {
+				if($use_key === true) $closest = $key;
+				else $closest = $item;
+			}
+		}
+	return $closest;
+    }
+
+ /**
+ * Flickr
+ **/
 
     /**
      * Get useful information from a Flickr file using the Flickr API
@@ -771,7 +881,7 @@ class wiki {
     }
 
     /**
-     * Extract the Flickr photo ID from URL
+     * Extract the Flickr or Ipernity photo ID from URL
      * @param $url The URL to be parsed
      * @return the numeric ID as string
     **/
@@ -782,74 +892,76 @@ class wiki {
 	return $id;
     }
 
+ /**
+ * Ipernity
+ **/
+
     /**
-     * Get information about external sources using their API (for now, only Flickr is supported,
-     * and requires a Flickr API key. Support for more service is in developement)
-     * @param $url The URL to be parsed
-     * @return the service, license, and the external thumbnail URL as array
+     * Get the information from a file in Ipernity using its ID
+     * @param $id The file ID
+     * @param $api_key The Ipernity API key
+     * @return the information as string
     **/
-    function getExternalInfo($url_g){
-	if(is_array($url_g)){
-		foreach($url_g as $url){
-			if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url) >= 1){
-				$url = $url;
-				$service = 'flickr';
-				break;
-			}
-		}
-	}else{
-		if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
-			$url = $url_g;
-			$service = 'flickr';
-		}
+    function getIpernityInfo($id,$api_key=null){
+	if(!empty($_SESSION['ipernity_info'][$id])) $result = $_SESSION['ipernity_info'][$id];
+	else{
+		$url = "https://www.ipernity.com/api/doc.get/php/e";
+		$query = "?doc_id=$id&api_key=$api_key";
+		$result = $this->query($query,null,null,$url);
+		$_SESSION['ipernity_info'][$id] = $result;
 	}
 	
-	if(empty($url)) return false;
-	
-	switch($service){
-		case 'flickr':
-			global $flickr_licenses_blacklist;
-			global $flickr_api_key;
-			
-			$photo_id = $this->getFlickrPhotoID($url);
-			$photo_info = $this->getFlickrInfo($photo_id,$flickr_api_key);
-
-			if($photo_info['stat'] == 'ok'){
-				$photo_license = $photo_info['photo']['license'];
-				$photo_url = $photo_info['photo']['urls']['url'][0]['_content'];
-
-				if(in_array($photo_license,$flickr_licenses_blacklist)) $allowed = false;
-
-				$license = $this->getFlickrLicense($photo_license,$flickr_api_key);
-				$thumburl = $this->getFlickrThumbURL($photo_id,$flickr_api_key);
-			}else{
-				$license = false;
-				return false;
-			}
-			break;
-		default: $license = false;
-	}
-
-	return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl,'url'=>$photo_url,'allowed'=>$allowed);
+	if($result['api']['status'] == 'ok') return $result;
+	else return false;
     }
 
     /**
-     * Get the closest number present in an array against an arbitrary number
-     * Credits to "Tim Cooper" at Stack Overflow: http://stackoverflow.com/users/142162/tim-cooper
-     * @param $haystack The arbithary number where find it
-     * @param $needle The array with the values to get the closest one
-     * @param $use_key To return the array key instead of its value
-     * @return the closest value or key
+     * Match the Ipernity license ID with the list of available licenses.
+     * Unlike Flickr, the licenses are not available through the API and
+     * should be stablished here staticaly
+     * @param $id The License ID, obtained from (getIpernityInfo)
+     * @return the license text
     **/
-    function bestFit($haystack,$needle,$use_key=false) {
-	$closest = null;
-		foreach ($needle as $key=>$item) {
-			if ($closest === null || (abs($haystack - $closest) > abs($item - $haystack) && $item <= $haystack)) {
-				if($use_key === true) $closest = $key;
-				else $closest = $item;
-			}
+    function getIpernityLicense($id){
+    
+	$licenses = array(0=>  "Copyright",
+			  1=>  "Attribution (CC by)",
+			  3=>  "Attribution+Non Commercial (CC by-nc)",
+			  5=>  "Attribution+Non Deriv (CC by-nd)",
+			  7=>  "Attribution+Non Commercial+Non Deriv (CC by-nc-nd)",
+			  9=>  "Attribution+Share Alike (CC by-sa)",
+			  11=> "Attribution+Non Commercial+Share Alike (CC by-nc-sa)",
+			  255=>"Copyleft (CC Zero)");
+
+	foreach($licenses as $key=>$lic){
+		if($id == $key){
+			$license = $lic;
+			break;
 		}
-	return $closest;
+	}
+	if(empty($license)) $license = false;
+	return $license;    
+    }
+
+    /**
+     * Extract the Thumbnail URL from an array of thumbnails, obtained
+     * with getIpernityInfo(), and find the best size with bestFit()
+     * @param $thumbs The Array containing the Thumbs element
+     * @param $max $The maximum desired height
+     * @return the URL of the thumbnail
+    **/
+    function getIpernityThumbURL($thumbs,$max=null){
+	
+	foreach($thumbs as $key=>$thumb){
+		$h[$key] = $thumb['h'];
+	}
+	
+	if(empty($h)) $h = 0;
+	
+	$best_fit = $this->bestFit($max,$h,true);
+	$best_fit = $best_fit-1;
+	
+	return $thumbs[$best_fit]['url'];
     }
 }
 ?>
