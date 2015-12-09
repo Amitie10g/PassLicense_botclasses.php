@@ -805,9 +805,9 @@ class wiki {
 
     /**
      * Get useful information from a Flickr file using the Flickr API
-     * @param $id The Flickr License ID
+     * @param $id The Flickr File ID
      * @param $api_key The Flickr API key (required to interact with the Flickr API
-     * @return the text of the given ID as string
+     * @return the information of the given file as array
     **/
     function getFlickrInfo($id,$api_key=null){
 	if(!empty($_SESSION['flickr_info'][$id])) $result = $_SESSION['flickr_info'][$id];
@@ -824,9 +824,9 @@ class wiki {
 
     /**
      * Get the license text from a Flickr License ID
-     * @param $id The Flickr ID of the file
+     * @param $id The Flickr License ID (NOT the file ID)
      * @param $api_key The Flickr API key (required to interact with the Flickr API
-     * @return the license text as array
+     * @return the license text as string
     **/
     function getFlickrLicense($id,$api_key=null){
 	if(!empty($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
@@ -900,7 +900,7 @@ class wiki {
      * Get the information from a file in Ipernity using its ID
      * @param $id The file ID
      * @param $api_key The Ipernity API key
-     * @return the information as string
+     * @return the information of the given file as array
     **/
     function getIpernityInfo($id,$api_key=null){
 	if(!empty($_SESSION['ipernity_info'][$id])) $result = $_SESSION['ipernity_info'][$id];
@@ -918,9 +918,9 @@ class wiki {
     /**
      * Match the Ipernity license ID with the list of available licenses.
      * Unlike Flickr, the licenses are not available through the API and
-     * should be stablished here staticaly
+     * should be stablished here statically
      * @param $id The License ID, obtained from (getIpernityInfo)
-     * @return the license text
+     * @return the license text as string
     **/
     function getIpernityLicense($id){
     
@@ -930,8 +930,7 @@ class wiki {
 			  5=>  "Attribution+Non Deriv (CC by-nd)",
 			  7=>  "Attribution+Non Commercial+Non Deriv (CC by-nc-nd)",
 			  9=>  "Attribution+Share Alike (CC by-sa)",
-			  11=> "Attribution+Non Commercial+Share Alike (CC by-nc-sa)",
-			  255=>"Copyleft (CC Zero)");
+			  11=> "Attribution+Non Commercial+Share Alike (CC by-nc-sa)");
 
 	foreach($licenses as $key=>$lic){
 		if($id == $key){
@@ -948,7 +947,7 @@ class wiki {
      * with getIpernityInfo(), and find the best size with bestFit()
      * @param $thumbs The Array containing the Thumbs element
      * @param $max $The maximum desired height
-     * @return the URL of the thumbnail
+     * @return the URL of the thumbnail as string
     **/
     function getIpernityThumbURL($thumbs,$max=null){
 	
@@ -959,7 +958,7 @@ class wiki {
 	if(empty($h)) $h = 0;
 	
 	$best_fit = $this->bestFit($max,$h,true);
-	$best_fit = $best_fit-1;
+	$best_fit = $best_fit-1; // Workarround due bestFit() return the key one greater, but the value is correct
 	
 	return $thumbs[$best_fit]['url'];
     }

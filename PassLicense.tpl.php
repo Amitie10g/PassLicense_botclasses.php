@@ -112,7 +112,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	<?php foreach($categories_review as $cat){ ?>
 	<option value="<?= $cat ?>">
 <?php } ?></datalist>
-<input type="submit" value="&#8811;">
+<input type="submit" value="&#8811;"> <a href="<?= $_SERVER['REQUEST_URI'] ?>&clear_cache">Clear cache</a>
 </form>
 <?php if(!empty($_GET['category'])){ ?>
 <form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">

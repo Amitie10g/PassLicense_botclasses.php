@@ -22,8 +22,13 @@ External services API support:
 
 To do:
 
-* Add support for more services
-* Improve the obtaing external information
+* Add support for more services (I want support for Picasa and Panoramio as priority)
+* Improve the obtaing external information (it is almost done)
 * Add support for pages in large categories (the MediaWiki API make this very hard)
+
+Why not use Flinfo?
+
+It is a good tool and I want to investigate and merge some code into PassLicense, but is not
+totally accurate and does not show the actual license in the source, based on the API.
 
 Please report any problem or bugs to the Issues section.

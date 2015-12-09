@@ -114,6 +114,9 @@ if(isset($_GET['pass'])){
 
 		$summary = 'License review passed (using PassLicense)';
 		$result[] = $wiki->edit($page,$content,$summary);
+		
+		// Unset the page contents cached
+		unset($_SESSION['wiki_page_contents'][$page]);
 	}
 
 	$_SESSION['result'] = $result;
