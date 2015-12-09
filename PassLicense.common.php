@@ -112,7 +112,7 @@ if(isset($_GET['pass'])){
 
 		$content = $wiki->replacestring($page,$replace,$with,$regex);
 
-		$summary = 'License passed (using PassLicense)';
+		$summary = 'License review passed (using PassLicense)';
 		$result[] = $wiki->edit($page,$content,$summary);
 	}
 
