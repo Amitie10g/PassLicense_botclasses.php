@@ -1,6 +1,6 @@
 <?php
 // Uncomment this for benchmark porposes
-/$timea = microtime();
+//$timea = microtime();
 
 error_reporting(E_ALL ^ E_WARNING & E_NOTICE);
 define('IN_PassLicense',true);
