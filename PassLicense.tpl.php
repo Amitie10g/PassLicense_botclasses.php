@@ -51,7 +51,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	}
 	.upload_details{
 		padding:5px;
-		margin:20px 0 0 0;
+		margin-top:20px;
 		font-size:10pt;
 	}
 	.collapse{
@@ -165,11 +165,11 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	
 	
 	
-	<div style="padding:10px;vertical-align:middle;width:1060px;margin:auto">
+	<div style="padding:10px;vertical-align:middle;width:1220px;margin:auto">
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
 				<span style="display:table-cell">Replace:&nbsp;</span>
-				<span style="display:table-cell"><input style="width:300px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
 					<option value="<?= $template ?>">;
@@ -177,7 +177,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell">With:&nbsp;</span>
-				<span style="display:table-cell"><input style="width:300px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<span style="display:table-cell"><input style="width:400px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
 	<?php foreach($licenses_passed as $license){ ?>
 					<option value="<?= $license ?>">
@@ -187,16 +187,14 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		</div>
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
-				<span style="display:table-cell">Replace:&nbsp;</span>
-				<span style="display:table-cell"><input style="width:300px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
 					<option value="<?= $template ?>">;
 	<?php } ?>			</datalist>
 			</div>
 			<div style="display:table-row">
-				<span style="display:table-cell">With:&nbsp;</span>
-				<span style="display:table-cell"><input style="width:300px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<span style="display:table-cell"><input style="width:400px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
 	<?php foreach($licenses_passed as $license){ ?>
 					<option value="<?= $license ?>">
@@ -206,16 +204,14 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		</div>
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
-				<span style="display:table-cell">Replace:&nbsp;</span>
-				<span style="display:table-cell"><input style="width:300px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
 					<option value="<?= $template ?>">;
 	<?php } ?>			</datalist>
 			</div>
 			<div style="display:table-row">
-				<span style="display:table-cell">With:&nbsp;</span>
-				<span style="display:table-cell"><input style="width:300px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<span style="display:table-cell"><input style="width:400px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
 	<?php foreach($licenses_passed as $license){ ?>
 					<option value="<?= $license ?>">

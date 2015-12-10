@@ -75,7 +75,7 @@ $flickr_licenses_blacklist = array(0,2,3,6,10);
 $ipernity_licenses_blacklist = array(0,3,5,7,11);
 
 require_once('PassLicense.class.php');
-$wiki = new wiki($project);
+$wiki = new PassLicense($project,$flickr_licenses_blacklist,$ipernity_licenses_blacklist,$flickr_api_key,$ipernity_api_key);
 
 if(isset($_GET['pass'])){
 
