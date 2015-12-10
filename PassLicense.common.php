@@ -79,13 +79,18 @@ $wiki = new PassLicense($project,$flickr_licenses_blacklist,$ipernity_licenses_b
 
 if(isset($_GET['pass'])){
 
-	$login = $wiki->login($user,$password);
-	if($login['login']['result'] != 'Success') die('Not logged in. Check your user and password');
-
-	if(empty($_POST['pagename'])) die('No data given');
-	
 	$pages = $_POST['pagename'];
 	$category = $_POST['category'];
+
+	$login = $wiki->login($user,$password);
+	if($login['login']['result'] != 'Success') $error = 'Not logged in';
+	if(empty($pages)) $error = 'No data given';
+
+	if(!empty($error)){
+		$_SESSION['result'] = array('errors'=>$error);
+		header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
+		die();	
+	}
 	
 	foreach($pages as $page){
 		if(!empty($_POST['replace_1'][$page])){
@@ -121,7 +126,7 @@ if(isset($_GET['pass'])){
 
 	$_SESSION['result'] = $result;
 	header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
-	die();	
+	die();
 
 }elseif(isset($_GET['clear_cache'])){
 	$category = $_GET['category'];

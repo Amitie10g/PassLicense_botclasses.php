@@ -87,11 +87,16 @@ if(!defined('IN_PassLicense')) die(); ?><html>
   <h1>PassLicense (botclasses.php)</h1>
 <div>
 
-<?php if(isset($_SESSION['result'])){ ?><div style="margin:10px">
+<?php if(isset($_SESSION['result'])){ ?><div>
 <?php	$result = $_SESSION['result'];
 	foreach($result as $key=>$item){
-		if($num%2 == 0)	$bg = 'DDD';
-		else $bg = 'EEE'; ?>
+		if($key == 'errors'){ ?>
+<div style="width:10em;margin:auto;background:#DDD;padding:5px;margin-bottom:10px;font-size:14pt;text-align:center">
+<b>Errors:</b>&nbsp;<?= $item ?>
+</div>
+<?php		}else{
+			if($num%2 == 0)	$bg = 'DDD';
+			else $bg = 'EEE'; ?>
 <div style="background:#<?= $bg ?>;margin:auto;padding:5px">
 <?php if($item['edit']['result'] == 'Success') { ?><a href="<?= $site_url ?><?= $item['edit']['title'] ?>"><b><?= $item['edit']['title'] ?>:</b> Success</a><?php }else{ ?><b><?= $key ?>:</b> Error<?php } ?>
 <label class="collapse" for="<?= $key ?>_details">[Details]</label>
@@ -102,7 +107,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </pre>
 </div>
 </div>
-<?php $num++; } ?>
+<?php $num++; } } ?>
 </div>
 <?php } ?>
 
