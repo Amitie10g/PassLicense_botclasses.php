@@ -10,7 +10,7 @@ $user = '';
 $password = '';
 $project = ''; // eg. https://commons.wikimedia.org/w/api.php
 $flickr_api_key = ''; // Required to interact with the Flickr API
-$ipernity_api_key = '' // Required to interact with the Ipernity API
+$ipernity_api_key = ''; // Required to interact with the Ipernity API
 
 require_once('PassLicense.common.php');
 
