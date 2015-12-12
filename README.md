@@ -1,10 +1,14 @@
 # PassLicense (botclasses.php)
-Simple, general purpose PHP script to replace strings (with regex support) to mass replacement in MediaWiki pages.
+Simple, general purpose PHP Web script to replace strings (with regex support) to mass replacement in MediaWiki pages.
 Intended to be used mainly for License review at Wikimedia Commons (by replacing tags from, eg. "{{review needed}}"
 with "{{review passed}}", in pages in File: namespace.
 
 Contains code from the Chris G's Bot classes library.
 It uses the MediaWiki, Flickr and Ipernity API. You need an API Key to use external services API.
+
+Warning: This tool is intended to be used only locally, and lacks of any authentication method itself.
+         For security reasons, DON'T expose it to Internet! or protect it with any authentication method
+	 supported by your Web server.
 
 #Features:
 

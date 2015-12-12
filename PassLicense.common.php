@@ -36,16 +36,16 @@ session_start();
 $site_url = parse_url($project);
 $site_url = $site_url['scheme'].'://'.$site_url['host'].'/wiki/';
 
-// License tags to search
+// License tags to search inside the pages
 $licenses_search = array('LicenseReview',
 			 'Flickrreview',
-			 'picasareview',
+			 'Picasareview',
 			 'Panoramioreview',
 			 'OpenStreetMapreview',
 			 'Indian navy');
 
-// License tags to replace
-$licenses_passed = array('{{subst:Lrw|site=<site>}}',
+// License tags for replace
+$licenses_replace = array('{{subst:Lrw|site=<site>}}',
 			 '{{subst:Frw}}',
 			 '{{Cc-by-3.0-BollywoodHungama|status=confirmed|reviewer=~~~}}',
 			 '{{picasareview|{{subst:REVISIONUSER}}|~~~~~}}',
@@ -56,19 +56,19 @@ $licenses_passed = array('{{subst:Lrw|site=<site>}}',
 
 // Categories to list (without the Category: prefix)
 $categories_review = array('License_review_needed',
-			     'Flickr images needing human review',
-			     'Picasa Web Albums files needing human review',
-			     'Panoramio images needing human review',
-			     'Ipernity review needed',
-			     'Unreviewed photos from indiannavy.nic.in',
-			     'Filmitadka review needed',
-			     'Fotopolska review needed',
-			     'Files from Freesound.org lacking source',
-			     'Images from HatenaFotolife needing License Review',
-			     'Unreviewed files from National Repository of Open Educational Resources',
-			     'OpenPhoto review needed',
-			     'Lemill Web Albums files needing human review',
-			     'Unreviewed files from Bollywood Hungama');
+			   'Flickr images needing human review',
+			   'Picasa Web Albums files needing human review',
+			   'Panoramio images needing human review',
+			   'Ipernity review needed',
+			   'Unreviewed photos from indiannavy.nic.in',
+			   'Filmitadka review needed',
+			   'Fotopolska review needed',
+			   'Files from Freesound.org lacking source',
+			   'Images from HatenaFotolife needing License Review',
+			   'Unreviewed files from National Repository of Open Educational Resources',
+			   'OpenPhoto review needed',
+			   'Lemill Web Albums files needing human review',
+			   'Unreviewed files from Bollywood Hungama');
 
 // The licenses ID not allowed in the wiki, according to
 // https://www.flickr.com/services/api/explore/flickr.photos.licenses.getInfo
@@ -106,10 +106,10 @@ if(isset($_GET['pass'])){
 	
 	$count = 0;
 	foreach($pages as $page){
-		if(!is_integer($max_queries)) $max_queries = 30;
 		// Avoid the API blocking by sleeping the script each certain ammount of queries
+		if(!is_int($max_queries)) $max_queries = 30;
 		$num = $count/$max_queries;
-		if(!is_integer($num) && $num > 0) sleep(5);
+		if(!is_int($num) && $num > 0) sleep(5);
 
 		if(!empty($_POST['replace_1'][$page])){
 			$replace[1] = $_POST['replace_1'][$page];

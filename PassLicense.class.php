@@ -812,9 +812,8 @@ class PassLicense extends Wiki {
 	
 	if(!empty($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
 	else{
-		$url = "https://api.flickr.com/services/rest/";
-		$query = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$this->flickr_api_key";
-		
+		$url    = "https://api.flickr.com/services/rest/";
+		$query  = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$this->flickr_api_key";
 		$result = $this->query($query,null,null,$url);
 		$_SESSION['flickr_licenses'] = $result;
 	}
@@ -843,8 +842,8 @@ class PassLicense extends Wiki {
 	function getFlickrThumbURL($id,$max_height=200){
 	if(!empty($_SESSION['flickr_thumburl'][$id])) $result = $_SESSION['flickr_thumburl'][$id];
 	else{
-		$url = "https://api.flickr.com/services/rest/";
-		$query = "?method=flickr.photos.getSizes&format=php_serial&api_key=$this->flickr_api_key&photo_id=$id";
+		$url    = "https://api.flickr.com/services/rest/";
+		$query  = "?method=flickr.photos.getSizes&format=php_serial&api_key=$this->flickr_api_key&photo_id=$id";
 		$result = $this->query($query,null,null,$url);
 		$_SESSION['flickr_thumburl'][$id] = $result;
 	}
@@ -874,8 +873,8 @@ class PassLicense extends Wiki {
 	function getIpernityInfo($id){
 		if(!empty($_SESSION['ipernity_info'][$id])) $result = $_SESSION['ipernity_info'][$id];
 		else{
-			$url = "https://www.ipernity.com/api/doc.get/php/e";
-			$query = "?doc_id=$id&api_key=$this->ipernity_api_key";
+			$url    = "https://www.ipernity.com/api/doc.get/php/e";
+			$query  = "?doc_id=$id&api_key=$this->ipernity_api_key";
 			$result = $this->query($query,null,null,$url);
 			$_SESSION['ipernity_info'][$id] = $result;
 		}

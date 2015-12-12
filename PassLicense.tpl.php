@@ -217,7 +217,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:400px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
-	<?php foreach($licenses_passed as $license){ ?>
+	<?php foreach($licenses_replace as $license){ ?>
 					<option value="<?= $license ?>">
 	<?php } ?>			</datalist>
 			</div>
