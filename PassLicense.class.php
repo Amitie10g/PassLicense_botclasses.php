@@ -210,13 +210,15 @@ class Wiki {
 	 * @param $url The URL where we want to work (for external services API)
 	 * @return The api result.
 	 **/
-	function query($query,$post=null,$repeat=0,$url=null){
+	function query($query,$post=null,$repeat=null,$url=null){
+
 		if(empty($url)) $url = $this->url;
+	
 		if($post==null) $ret = $this->http->get($url.$query);
 		else $ret = $this->http->post($url.$query,$post);
 		if($this->http->http_code() != "200"){
 			if($repeat < 10) return $this->query($query,$post,++$repeat);
-		else throw new Exception("HTTP Error " . $this->http->http_code() );
+		else throw new Exception("HTTP Error " . $this->http->http_code() . " - $url$query"  );
 		}
 		if($this->echoRet) {
 			if( @unserialize( $ret ) === false ) {
@@ -224,6 +226,26 @@ class Wiki {
 			}
 		}
 		return unserialize( $ret );
+	}
+	
+	/**
+	 * Gets the content of a page. Returns false on error.
+	 * @param $page The wikipedia page to fetch.
+	 * @param $revid The revision id to fetch (optional)
+	 * @return The wikitext for the page.
+	 **/
+	function getpage ($page,$revid=null,$detectEditConflict=false) {
+		$append = '';
+		if ($revid!=null)
+		$append = '&rvstartid='.$revid;
+		$x = $this->query('?action=query&format=php&prop=revisions&titles='.urlencode($page).'&rvlimit=1&rvprop=content|timestamp'.$append);
+		foreach ($x['query']['pages'] as $ret) {
+			if (isset($ret['revisions'][0]['*'])) {
+				if ($detectEditConflict)
+				$this->ecTimestamp = $ret['revisions'][0]['timestamp'];
+				return $ret['revisions'][0]['*'];
+			}else return false;
+		}
 	}
 
 	/**
@@ -369,7 +391,7 @@ class Wiki {
 	 * @param $bot Whether or not to mark edit as a bot edit.  (Default true)
 	 * @return api result
 	 **/
-	function edit ($page,$data,$summary = '',$minor = false,$bot = true,$section = null,$detectEC=false,$maxlag='') {
+	function edit($page,$data,$summary = '',$minor = false,$bot = true,$section = null,$detectEC=false,$maxlag='') {
 		if ($this->token==null) {
 			$this->token = $this->getedittoken();
 		}
@@ -489,7 +511,8 @@ class Wiki {
 }
 
 /**
- * This class is intended to do the license check/pass
+ * This class is intended to do the license check/pass. External services API keys
+ * should be declared in __construct()
  * @author Davod
  * @param $url The Project URL
  * @param $flickr_licenses_blacklist The Flickr Licenses blacklist array
@@ -504,18 +527,21 @@ class PassLicense extends Wiki {
 	private $ipernity_api_key;
 	private $flickr_licenses_blacklist;
 	private $ipernity_licenses_blacklist;
-	
+	private $picasa_licenses_blacklist;
+
 	function __construct($url,
 			     $flickr_licenses_blacklist,
 			     $ipernity_licenses_blacklist,
+			     $picasa_licenses_blacklist,
 			     $flickr_api_key=null,
 			     $ipernity_api_key=null){
 
 		Wiki::__construct($url); // Pass main parameter to parent Class' __construct() 
-		$this->flickr_api_key = $flickr_api_key;
-		$this->ipernity_api_key = $ipernity_api_key;
 		$this->flickr_licenses_blacklist = $flickr_licenses_blacklist;
 		$this->ipernity_licenses_blacklist = $ipernity_licenses_blacklist;
+		$this->picasa_licenses_blacklist = $picasa_licenses_blacklist;
+		$this->flickr_api_key = $flickr_api_key;
+		$this->ipernity_api_key = $ipernity_api_key;
 	}
 	
 	/**
@@ -523,12 +549,14 @@ class PassLicense extends Wiki {
 	 **/
 
 	/**
-	 * Get the contents from the Wiki in several formats, using the MediaWiki API (cached)
+	 * Get the contents from the Wiki page in several formats, using the MediaWiki API (cached)
 	 * @param $page The page that we're working
-	 * @param $props The properties that we want to obtain from the query
+	 * @param $props The properties that we want to obtain from the query (string or array)
 	 * @return the contents as array
 	**/
 	function getPageContents($page,$props=null){
+	
+		if(is_array($props)) $props = implode('|',$props);
 	
 		if(!empty($_SESSION['wiki_page_contents'][$page][$props])) $contents = $_SESSION['wiki_page_contents'][$page][$props];
 		else{
@@ -546,8 +574,8 @@ class PassLicense extends Wiki {
 	 * @return the URL as string
 	**/
 	function getThumbURL($page,$width=null,$height=null){
-		if(empty($width)) $width = '2000';
-		if(empty($height)) $height = '2000';
+		if(!is_numeric($width)) $width = '2000';
+		if(!is_numeric($height)) $height = '2000';
 
 		if(!empty($_SESSION['thumburl'][$page][$width.'_'.$height])) $thumburl = $_SESSION['thumburl'][$page][$width.'_'.$height];
 		else{
@@ -571,20 +599,27 @@ class PassLicense extends Wiki {
 	function getTemplates($content,$tags=null){
 		if(!empty($tags)){
 			if(is_array($tags)) $tags = implode('|',$tags);
-			$tags = preg_quote($tags);
+			$tags = addcslashes($tags,'.\+*?[^]$(){}=!<>:-');
 			$pattern_search = "/\({\{($tags){1}\}\})*/";
 		}else $pattern_search = "/(\{\{[\p{L}\p{N}\p{P}\|= ]+\}\})+/";
-		
+
 		preg_match_all($pattern_search,$content,$templates);
 		$templates = $templates[0];
 		return $templates;
 	}
 	
 	/**
-	 * Get information about external sources using their API
-	 * (for now, only Flickr and Ipernity API are supported, and requires a an API key from they).
-	 * @param $url The URL to be parsed
-	 * @return the service, license, and the external thumbnail URL as array
+	 * Get information about external sources from an URL. URL is parsed using regex, and the information
+	 * is obtained using the external services API (for now, only Flickr and Ipernity API are supported,
+	 * and requires a an API key from them).
+	 * @params $url_g The URL to be parsed
+	 * @return an array with the following elements:
+	 *   'service'  The external service found
+	 *   'license'  The license text (eg. Creative Commons Attribution)
+	 *   'thumburl' The url of the file thumbnail, to be displayed at the page and compare it
+	 *              with the file found at the Wiki
+	 *   'url'      The actual URL to the file located at the external service
+	 *   'allowed'  If the license is allowed at the Wiki (false if not)
 	**/
 	function getExternalInfo($url_g){
 	
@@ -598,7 +633,22 @@ class PassLicense extends Wiki {
 					$url = $url;
 					$service = 'ipernity';
 					break;
-				}
+				// Picasa (normal link)
+				}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/[\p{L}\p{N}]+\/[\p{L}\p{N}]+#[\p{N}]+$/',$url) >= 1){
+					$url = $url;
+					$service = 'picasa_url';
+					break;
+				// Picasa (share link)
+				}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/lh\/photo\/[\p{L}\p{N}]+/',$url) >= 1){
+					$url = $url;
+					$service = 'picasa_share';
+					break;
+				// Picasa (Google+ link)
+				}elseif(preg_match('/^(http|https){1}\:\/\/plus\.google\.com\/photos\/\+[\p{L}\p{N}%]+\/albums\/[\p{N}]+\/[\p{N}]+\?pid\=[\p{N}]+&oid\=[\p{N}]+$/',$url) >= 1){
+					$url = $url;
+					$service = 'picasa_gplus';
+					break;
+				}// Add more services here
 			}
 		}else{
 			if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
@@ -607,18 +657,30 @@ class PassLicense extends Wiki {
 			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(ipernity\.com\/doc\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'flickr';
+			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/[\p{L}\p{N}]+\/[\p{L}\p{N}]+#[\p{N}]+$/',$url) >= 1){
+				$url = $url_g;
+				$service = 'picasa_url';
+				break;
+
+			// Picasa (Google+ link)
+			}elseif(preg_match('/^(http|https){1}\:\/\/plus\.google\.com\/photos\/\+[\p{L}\p{N}%]+\/albums\/[\p{N}]+\/[\p{N}]+\?pid\=[\p{N}]+&oid\=[\p{N}]+$/',$url) >= 1){
+				$url = $url_g;
+				$service = 'picasa_gplus';
+				break;
 			}
 		}
-
+		
 		if(empty($url)) return false;
 
 		switch($service){
 			case 'flickr':
 
 				if(empty($this->flickr_api_key)) return false;
+				
+				$service = 'Flickr';
 		
 				$photo_id = $this->getPhotoID($url,3);
-				$photo_info = $this->getFlickrInfo($photo_id,$this->flickr_api_key);
+				$photo_info = $this->getFlickrInfo($photo_id);
 
 				if($photo_info['stat'] == 'ok'){
 					$photo_license = $photo_info['photo']['license'];
@@ -626,8 +688,9 @@ class PassLicense extends Wiki {
 
 					if(in_array($photo_license,$this->flickr_licenses_blacklist)) $allowed = false;
 
-					$license = $this->getFlickrLicense($photo_license,$flickr_api_key);
-					$thumburl = $this->getFlickrThumbURL($photo_id,$flickr_api_key);
+					$license = $this->getFlickrLicense($photo_license);
+					$thumburl = $this->getFlickrThumbURL($photo_id);
+
 				}else{
 					$license = false;
 					return false;
@@ -635,6 +698,8 @@ class PassLicense extends Wiki {
 				break;
 
 			case 'ipernity':
+
+				$service = 'Ipernity';
 
 				$photo_id = $this->getPhotoID($url,3);
 				$photo_info = $this->getIpernityInfo($photo_id,$this->ipernity_api_key);
@@ -651,6 +716,19 @@ class PassLicense extends Wiki {
 				}
 				break;
 
+			case 'picasa_url':
+				$url_r = str_replace('#','/',$url);
+				$user = $this->getPhotoID($url_r,1);
+				$album = $this->getPhotoID($url_r,2);
+				$photo_id = $this->getPhotoID($url_r,3);
+				$result = $this->getPicasaInformation($user,$album,$photo_id);
+				$license = $result['gphoto$license']['name'];
+				if(in_array($result['gphoto$license']['id'],$this->picasa_licenses_blacklist)) $allowed = false;
+				$thumburl = $this->getPicasaThumbURL($result['icon']['$t']);
+				$photo_url = $url;
+				$service = 'Picasa';
+				break;			
+			// Add more services here
 			default: $license = false;
 		}
 
@@ -658,12 +736,13 @@ class PassLicense extends Wiki {
 	}
 
 	/**
-	 * Get the closest number present in an array against an arbitrary number
+	 * Get the closest (and not greater) number present in an array against an arbitrary number,
+	 * specifically, the thumbnail sizes available, extracted from an external service API query.
 	 * Credits to "Tim Cooper" at Stack Overflow: http://stackoverflow.com/users/142162/tim-cooper
-	 * @param $haystack The arbitrary number where find it
-	 * @param $needle The array with the values to get the closest one
+	 * @param $haystack The arbitrary number where find them
+	 * @param $needle The array with the (integer) values to get the closest one
 	 * @param $use_key To return the array key instead of its value
-	 * @return the closest value or key
+	 * @return the closest (and not greater) value or its key
 	**/
 	function bestFit($haystack,$needle,$use_key=false) {
 		$closest = null;
@@ -677,20 +756,45 @@ class PassLicense extends Wiki {
 	}
 	
 	/**
+	 * Extract the desired parameter from an URL (mainly for the Photo ID).
+	 * URL components are extracted using parse_url() with either
+	 * PHP_URL_PATH (for services using URL rewrite) or PHP_URL_QUERY
+	 * (for services that doesn't support it and receives the ID as a GET parameter).
+	 * Photo ID from Flickr and Ipernity are fuond usually at the fourth position ($id[3]).
+	 * @param $url The URL to be parsed
+	 * @param $where The desired position or parameter to extract the ID
+	 *   If integer, the position of the array given with explode()
+	 *   If string, the name of the parameter in the URI
+	 * @return the numeric ID as string
+	**/
+	function getPhotoID($url,$where=null){
+		if(is_int($where)){
+			$id = explode('/',parse_url($url,PHP_URL_PATH));
+			$id = $id[$where];
+		}elseif(is_string($where)){
+			$id = parse_url($url,PHP_URL_QUERY);
+			$id = parse_str($url,$params);
+			$id = $params[$where];
+			if(empty($id)) $id = false;
+		}else return false;
+
+		return $id;
+	}
+
+	/**
 	 * Flickr
 	 **/
 
 	/**
 	 * Get useful information from a Flickr file using the Flickr API (cached)
 	 * @param $id The Flickr File ID
-	 * @param $api_key The Flickr API key (required to interact with the Flickr API
 	 * @return the information of the given file as array
 	**/
-	function getFlickrInfo($id,$api_key=null){
+	function getFlickrInfo($id){
 	if(!empty($_SESSION['flickr_info'][$id])) $result = $_SESSION['flickr_info'][$id];
 	else{
 		$url = "https://api.flickr.com/services/rest/";
-		$query = "?method=flickr.photos.getInfo&format=php_serial&api_key=$api_key&photo_id=$id";
+		$query = "?method=flickr.photos.getInfo&format=php_serial&api_key=$this->flickr_api_key&photo_id=$id";
 		$result = $this->query($query,null,null,$url);
 		$_SESSION['flickr_info'][$id] = $result;
 	}
@@ -700,19 +804,21 @@ class PassLicense extends Wiki {
 	}
 
 	/**
-	 * Get the license text from a Flickr License ID
+	 * Get the license text from a Flickr License ID (cached)
 	 * @param $id The Flickr License ID (NOT the file ID)
-	 * @param $api_key The Flickr API key (required to interact with the Flickr API
 	 * @return the license text as string
 	**/
-	function getFlickrLicense($id,$api_key=null){
+	function getFlickrLicense($id){
+	
 	if(!empty($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
 	else{
 		$url = "https://api.flickr.com/services/rest/";
-		$query = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$api_key";
+		$query = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$this->flickr_api_key";
+		
 		$result = $this->query($query,null,null,$url);
 		$_SESSION['flickr_licenses'] = $result;
 	}
+	
 	if($result['stat'] == 'ok'){
 		$licenses = $result['licenses']['license'];
 
@@ -729,17 +835,16 @@ class PassLicense extends Wiki {
 	}
 
 	/**
-	 * Get the thumbnail of a Flickr file using its ID
+	 * Get the thumbnail of a Flickr file using its ID (cached)
 	 * @param $id The Flickr file ID
-	 * @param $api_key The Flickr API key (required to interact with the Flickr API)
 	 * @param $max_height = The maximum desired height
 	 * @return the numeric ID as string
 	**/   
-	function getFlickrThumbURL($id,$api_key=null,$max_height=200){
+	function getFlickrThumbURL($id,$max_height=200){
 	if(!empty($_SESSION['flickr_thumburl'][$id])) $result = $_SESSION['flickr_thumburl'][$id];
 	else{
 		$url = "https://api.flickr.com/services/rest/";
-		$query = "?method=flickr.photos.getSizes&format=php_serial&api_key=$api_key&photo_id=$id";
+		$query = "?method=flickr.photos.getSizes&format=php_serial&api_key=$this->flickr_api_key&photo_id=$id";
 		$result = $this->query($query,null,null,$url);
 		$_SESSION['flickr_thumburl'][$id] = $result;
 	}
@@ -764,14 +869,13 @@ class PassLicense extends Wiki {
 	/**
 	 * Get the information from a file in Ipernity using its ID
 	 * @param $id The file ID
-	 * @param $api_key The Ipernity API key
 	 * @return the information of the given file as array
 	**/
-	function getIpernityInfo($id,$api_key=null){
+	function getIpernityInfo($id){
 		if(!empty($_SESSION['ipernity_info'][$id])) $result = $_SESSION['ipernity_info'][$id];
 		else{
 			$url = "https://www.ipernity.com/api/doc.get/php/e";
-			$query = "?doc_id=$id&api_key=$api_key";
+			$query = "?doc_id=$id&api_key=$this->ipernity_api_key";
 			$result = $this->query($query,null,null,$url);
 			$_SESSION['ipernity_info'][$id] = $result;
 		}
@@ -783,19 +887,20 @@ class PassLicense extends Wiki {
 	/**
 	 * Match the Ipernity license ID with the list of available licenses.
 	 * Unlike Flickr, the licenses are not available through the API and
-	 * should be stablished here statically
-	 * @param $id The License ID, obtained from (getIpernityInfo)
+	 * should be stablished here statically.
+	 * @param $id The License ID, obtained from getIpernityInfo()
 	 * @return the license text as string
 	**/
 	function getIpernityLicense($id){
-	
+
 		$licenses = array(0=>  "Copyright",
 				  1=>  "Attribution (CC by)",
 				  3=>  "Attribution+Non Commercial (CC by-nc)",
 				  5=>  "Attribution+Non Deriv (CC by-nd)",
 				  7=>  "Attribution+Non Commercial+Non Deriv (CC by-nc-nd)",
 				  9=>  "Attribution+Share Alike (CC by-sa)",
-				  11=> "Attribution+Non Commercial+Share Alike (CC by-nc-sa)");
+				  11=> "Attribution+Non Commercial+Share Alike (CC by-nc-sa)",
+				  255=>"Copyleft (PD author)");
 
 		foreach($licenses as $key=>$lic){
 			if($id == $key){
@@ -809,54 +914,76 @@ class PassLicense extends Wiki {
 
 	/**
 	 * Extract the Thumbnail URL from an array of thumbnails, obtained
-	 * with getIpernityInfo(), and find the best size with bestFit()
+	 * with getIpernityInfo(), and find the best size with bestFit().
 	 * @param $thumbs The Array containing the Thumbs element
-	 * @param $max $The maximum desired height
-	 * @return the URL of the thumbnail as string
+	 * @param $max The maximum desired height
+	 * @return the desired URL of the thumbnail as string
 	**/
 	function getIpernityThumbURL($thumbs,$max=null){
 	
 		foreach($thumbs as $key=>$thumb){
 			$h[$key] = $thumb['h'];
 		}
-	
+
 		if(empty($h)) $h = 0;
-	
+
 		$best_fit = $this->bestFit($max,$h,true);
-		$best_fit = $best_fit-1; // Workarround due bestFit() return the key one greater, but the value is correct
-	
+		// Workarround due bestFit() return the key one greater, but the value is correct
+		$best_fit = $best_fit-1;
+
 		return $thumbs[$best_fit]['url'];
 	}
 	
 	/**
-	 * Shared
+	 * Picasa
 	 **/
-	
-	/**
-	 * Extract the desired parameter from a URL (mainly for the Photo ID).
-	 * URL components are extracted using parse_url() with either
-	 * PHP_URL_PATH (for services using URL rewrite) or PHP_URL_QUERY
-	 * (for services that receives the ID as a GET parameter.
-	 * Flickr and Ipernity usually obtain the photo ID at the fourth position ($id[3]).
-	 * @param $url The URL to be parsed
-	 * @param $where The desired position or parameter to extract the ID
-	 *   If integer, the position of the array given with explode()
-	 *   If string, the name of the parameter in the URI
-	 * @return the numeric ID as string
-	**/
-	function getPhotoID($url,$where=null){
-	
-		if(is_int($where)){
-			$id = explode('/',parse_url($url,PHP_URL_PATH));
-			$id = $id[$where];
-		}elseif(is_string($where)){
-			$id = parse_url($url,PHP_URL_QUERY);
-			$id = parse_str($url,$params);
-			$id = $params[$where];
-			if(empty($id)) $id = false;
-		}else return false;
 
-		return $id;
+	/**
+	 * Get information about a file at Picasa, using the ATOM feed retreived as JSON (cached)
+	 * @param $user The Username of the owner (either numeric or string)
+	 * @param $album The Album (either numeric or string)
+	 * @param $photoid The photo ID (as numeric)
+	 * @return the array with the information
+	**/	
+	function getPicasaInformation($user,$album,$photoid){
+		if(!is_numeric($photoid)) return false;
+
+		if(is_numeric($album)) $album_p = 'albumid';
+		elseif(is_string($album)) $album_p = 'album';
+
+		$url = "https://picasaweb.google.com/data/feed/api/user/$user/$album_p/$album/photoid/$photoid?hl=en&alt=json";
+
+		if(!empty($_SESSION['picasa_info'][$user][$album][$photoid])) $result = $_SESSION['picasa_info'][$user][$album][$photoid];
+		else{
+			// Only public feeds will be reterived. Otherwise, am HTTP 404 will be got
+			// Private feeds could be obtained with authentication using OAuth 2.0, but
+			// that feature is in researching and developement
+			$headers = get_headers($url.$query);			
+			if($headers[0] == 'HTTP/1.0 200 OK'){
+				// Using file_get_contents() due cURL does not work with this result (tested)
+				$result = file_get_contents($url);
+				$result = @json_decode($result,true);
+				if(empty($result['feed'])) $result = false;
+				else $result = $result['feed'];
+				$_SESSION['picasa_info'][$user][$album][$photoid] = $result;
+			}else $result = false;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Parse a Picasa file URL (direct link), and modify the height; bestfit() is not needed
+	 * @param $url The URL to be parsed
+	 * @param $bestfit The (maximum) desired height
+	 * @return the URL with the desired height established
+	**/	
+	function getPicasaThumbURL($url,$bestfit=200){
+		$url_a = parse_url($url);
+		$url_p = explode('/',$url_a['path']);
+		$url_p[5] = "h$bestfit";
+		$url = $url_a['scheme'].'://'.$url_a['host'].implode('/',$url_p);
+		return $url;
 	}
 }
 ?>

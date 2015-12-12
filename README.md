@@ -1,12 +1,12 @@
 # PassLicense (botclasses.php)
-Simple, general purpose script to replace strings (with regex support) writen in PHP as a Web application,
-to mass replacement in MediaWiki pages. Intended to be used mainly for License review at Wikimedia Commons
-(by replacing tags from, eg. "{{review needed}}" with "{{review passed}}", in pages in File: namespace.
+Simple, general purpose PHP script to replace strings (with regex support) to mass replacement in MediaWiki pages.
+Intended to be used mainly for License review at Wikimedia Commons (by replacing tags from, eg. "{{review needed}}"
+with "{{review passed}}", in pages in File: namespace.
 
 Contains code from the Chris G's Bot classes library.
 It uses the MediaWiki, Flickr and Ipernity API. You need an API Key to use external services API.
 
-Features:
+#Features:
 
 * Listing members from a arbitary category, with a selection of categories for review
 * Displaying page contents with fewer resources than viewing the full page
@@ -19,16 +19,23 @@ External services API support:
 
 * Flickr
 * Ipernity
-
-To do:
-
-* Add support for more services (I want support for Picasa and Panoramio as priority)
-* Improve the obtaing external information (it is almost done)
-* Add support for pages in large categories (the MediaWiki API make this very hard)
+* Picasa
 
 Why not use Flinfo?
 
-It is a good tool and I want to investigate and merge some code into PassLicense, but is not
-totally accurate and does not show the actual license in the source, based on the API.
+It is a good tool and I want to research and merge some code into PassLicense, but it is
+not totally accurate and does not show the actual license at the source, based on the API.
 
-Please report any problem or bugs to the Issues section.
+#Requiriments:
+
+* php 5.5 or above, with cURL and PCRE support
+* A valid account at your Wiki (better if that account have bot flag)
+* Flickr and Ipernity API keys, to interact with these services (not mandatory but dessirable).
+  You can obtain them from these sites at no cost
+
+#To do:
+
+* Add support for more services (Panoramio as priority)
+* Add support for pages in large categories (the MediaWiki API make this very hard)
+
+I can do this job alone, but any help is welcome.

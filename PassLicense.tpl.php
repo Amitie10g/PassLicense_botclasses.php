@@ -90,13 +90,8 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 <?php if(isset($_SESSION['result'])){ ?><div>
 <?php	$result = $_SESSION['result'];
 	foreach($result as $key=>$item){
-		if($key == 'errors'){ ?>
-<div style="width:10em;margin:auto;background:#DDD;padding:5px;margin-bottom:10px;font-size:14pt;text-align:center">
-<b>Errors:</b>&nbsp;<?= $item ?>
-</div>
-<?php		}else{
-			if($num%2 == 0)	$bg = 'DDD';
-			else $bg = 'EEE'; ?>
+		if($num%2 == 0)	$bg = 'DDD';
+		else $bg = 'EEE'; ?>
 <div style="background:#<?= $bg ?>;margin:auto;padding:5px">
 <?php if($item['edit']['result'] == 'Success') { ?><a href="<?= $site_url ?><?= $item['edit']['title'] ?>"><b><?= $item['edit']['title'] ?>:</b> Success</a><?php }else{ ?><b><?= $key ?>:</b> Error<?php } ?>
 <label class="collapse" for="<?= $key ?>_details">[Details]</label>
@@ -107,7 +102,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </pre>
 </div>
 </div>
-<?php $num++; } } ?>
+<?php $num++;  } ?>
 </div>
 <?php } ?>
 
@@ -117,7 +112,8 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	<?php foreach($categories_review as $cat){ ?>
 	<option value="<?= $cat ?>">
 <?php } ?></datalist>
-<input type="submit" value="&#8811;"> <a href="<?= $_SERVER['REQUEST_URI'] ?>&clear_cache">Clear cache</a>
+<input type="submit" value="&#8811;">&nbsp;
+<a href="<?= $uri_s[1] ?>"><?= $uri_s[2] ?></a>&nbsp;|&nbsp;<a href="<?= $uri_s[0] ?>&clear_cache">Clear cache</a>
 </form>
 <?php if(!empty($_GET['category'])){ ?>
 <form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
@@ -133,12 +129,15 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			$content = $wiki->GetPageContents($page,"text|wikitext|externallinks");
 			
 			$external_links = $content['parse']['externallinks'];
+			
 			$external_info = $wiki->getExternalInfo($external_links);
 			$external_license = $external_info['license'];
 			$allowed = $external_info['allowed'];
-
+			
 			// Hide results from unallowed licenses, or show them by passing parameter
 			if($allowed !== false || isset($_GET['show_blacklisted'])){
+			
+				$non_empty = true;
 
 				$wikitext = $content['parse']['wikitext']['*'];
 				$templates = $wiki->getTemplates($wikitext,$licenses);			
@@ -163,13 +162,10 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		<?php if(!empty($external_thumburl)){ ?><div style="display:inline-table">
 			<a href="<?= $photo_url ?>" target="<?= urlencode($page) ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
 			<div>Picture found at <?= ucfirst($external_service) ?>
-			<?php if(!empty($external_license)){ ?>(<?= $external_license ?>)<?php } ?></div>
+			<?php if(!empty($external_license)){ ?> - <?= $external_license ?><?php } ?></div>
 		</div><?php } ?>
 	</div>
-	
-	
-	
-	
+
 	<div style="padding:10px;vertical-align:middle;width:1220px;margin:auto">
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
@@ -177,8 +173,9 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
-					<option value="<?= $template ?>">;
-	<?php } ?>			</datalist>
+					<option value="<?= $template ?>">
+	<?php } ?>			<option value="<?= $photo_url ?>">
+				</datalist>
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell">With:&nbsp;</span>
@@ -195,8 +192,9 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
-					<option value="<?= $template ?>">;
-	<?php } ?>			</datalist>
+					<option value="<?= $template ?>">
+	<?php } ?>			<option value="<?= $photo_url ?>">
+				</datalist>
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:400px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
@@ -212,8 +210,9 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
-					<option value="<?= $template ?>">;
-	<?php } ?>			</datalist>
+					<option value="<?= $template ?>">
+	<?php } ?>			<option value="<?= $photo_url ?>">
+				</datalist>
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:400px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
@@ -235,10 +234,11 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 </div>
 <div style="clear:both;font-size:0">&nbsp;</div>
 </div>
-<?php $num++; } } ?>
-<p><input type="hidden" name="category" value="<?= $_GET['category'] ?>"><input type="submit" value="Pass files &#8811;"></p>
+<?php $num++; } } } if(!empty($non_empty)){ ?>
+<p><input type="hidden" name="category" value="<?= $_GET['category'] ?>">
+<input type="submit" value="Pass files &#8811;"></p>
+<?php }else{ ?><i>No files in this category</i><?php } } ?>
 </form>
-<?php }else{ ?><p style="font-style:italic">No files in this category</p><?php } } ?>
 </div>
 </body>
 </html>

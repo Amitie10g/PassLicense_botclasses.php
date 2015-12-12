@@ -29,6 +29,8 @@
 if(!defined('IN_PassLicense')) die();
 define('TEMP_PATH',realpath(sys_get_temp_dir()));
 
+set_time_limit(300);
+
 session_start();
 
 $site_url = parse_url($project);
@@ -55,15 +57,16 @@ $licenses_passed = array('{{subst:Lrw|site=<site>}}',
 // Categories to list (without the Category: prefix)
 $categories_review = array('License_review_needed',
 			     'Flickr images needing human review',
+			     'Picasa Web Albums files needing human review',
+			     'Panoramio images needing human review',
+			     'Ipernity review needed',
+			     'Unreviewed photos from indiannavy.nic.in',
 			     'Filmitadka review needed',
 			     'Fotopolska review needed',
 			     'Files from Freesound.org lacking source',
 			     'Images from HatenaFotolife needing License Review',
-			     'Unreviewed photos from indiannavy.nic.in',
-			     'Ipernity review needed',
 			     'Unreviewed files from National Repository of Open Educational Resources',
 			     'OpenPhoto review needed',
-			     'Panoramio images needing human review',
 			     'Lemill Web Albums files needing human review',
 			     'Unreviewed files from Bollywood Hungama');
 
@@ -74,14 +77,23 @@ $flickr_licenses_blacklist = array(0,2,3,6,10);
 // Same as above, for Ipernity. See http://www.ipernity.com/help/api/method/doc.setLicense
 $ipernity_licenses_blacklist = array(0,3,5,7,11);
 
+$picasa_licenses_blacklist = array(0,1,2,3,6);
+
 require_once('PassLicense.class.php');
-$wiki = new PassLicense($project,$flickr_licenses_blacklist,$ipernity_licenses_blacklist,$flickr_api_key,$ipernity_api_key);
+$wiki = new PassLicense($project,
+			$flickr_licenses_blacklist,
+			$ipernity_licenses_blacklist,
+			$picasa_licenses_blacklist,
+			$flickr_api_key,
+			$ipernity_api_key);
+		
+$wiki->setUserAgent('PassLicense/0.9 (https://github.com/Amitie10g/PassLicense_botclasses.php; davidkingnt@gmail.com) Botclasses.php/1.0');
 
 if(isset($_GET['pass'])){
 
 	$pages = $_POST['pagename'];
 	$category = $_POST['category'];
-
+	
 	$login = $wiki->login($user,$password);
 	if($login['login']['result'] != 'Success') $error = 'Not logged in';
 	if(empty($pages)) $error = 'No data given';
@@ -92,7 +104,13 @@ if(isset($_GET['pass'])){
 		die();	
 	}
 	
+	$count = 0;
 	foreach($pages as $page){
+		if(!is_integer($max_queries)) $max_queries = 30;
+		// Avoid the API blocking by sleeping the script each certain ammount of queries
+		$num = $count/$max_queries;
+		if(!is_integer($num) && $num > 0) sleep(5);
+
 		if(!empty($_POST['replace_1'][$page])){
 			$replace[1] = $_POST['replace_1'][$page];
 			if(!empty($_POST['with_1'][$page])) $with[1] = $_POST['with_1'][$page];
@@ -118,10 +136,12 @@ if(isset($_GET['pass'])){
 		$content = $wiki->replacestring($page,$replace,$with,$regex);
 
 		$summary = 'License review passed (using PassLicense)';
-		$result[] = $wiki->edit($page,$content,$summary);
+		$result[] = $wiki->edit($page,$content,$summary,true);
 		
 		// Unset the page contents cached
 		unset($_SESSION['wiki_page_contents'][$page]);
+		
+		$count++;
 	}
 
 	$_SESSION['result'] = $result;
@@ -130,12 +150,17 @@ if(isset($_GET['pass'])){
 
 }elseif(isset($_GET['clear_cache'])){
 	$category = $_GET['category'];
+	if(isset($_GET['show_blacklisted'])) $blacklisted = "&show_blacklisted";
 	session_destroy();
-	header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
+	header('Location: '.$_SERVER['PHP_SELF']."?category=$category$blacklisted");
 	die();
 }else{
 	if(!empty($_GET['category'])){
 		$category = $_GET['category'];
+		$uri_o = str_replace(' ','_',$_SERVER['PHP_SELF']."?category=$category");
+		$uri_b = str_replace(' ','_',"$uri_o&show_blacklisted");
+		if(isset($_GET['show_blacklisted'])) $uri_s = array($uri_b,$uri_o,'Hide blacklisted');
+		else $uri_s = array($uri_o,$uri_b,'Show blacklisted');
 		$pages = $wiki->categorymembers("Category:$category",250);
 	}
 	
