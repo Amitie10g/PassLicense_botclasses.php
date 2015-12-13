@@ -782,6 +782,19 @@ class PassLicense extends Wiki {
 	}
 
 	/**
+	 * Get a valid colour in hexadecimal notation (for css) and return default values if them are not valid
+	 * @param $color The colour in hexadecimal notation (eg ABF or ACDCEF)
+	 * @param $bg If the colour is intended for background or foreground
+	 * @return the valid colour in hexadecimal nottaion, or '000' for foreground and 'fff' for background
+	**/
+	function hexColor($color,$bg=false){
+		if($bg === false && preg_match('/^([0-9a-fA-F]{3}){1,2}$/',$color == 0) && $bg == false) $color = '000';
+		elseif($bg === true && preg_match('/^([0-9a-fA-F]{3}){1,2}$/',$color == 0) && $bg == false) $color = 'fff';
+
+		return $color;
+	}
+
+	/**
 	 * Flickr
 	 **/
 

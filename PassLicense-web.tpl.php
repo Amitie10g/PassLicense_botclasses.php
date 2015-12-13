@@ -26,6 +26,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	body{
 		font-size:12pt;
 		font-family: Roboto, Arial sans-serif;
+		background: #<?= $color_body_bg ?>;
 	}
 	.checkbox, .thumb, .item, .thumb2, .col1, .col2{
 		vertical-align:middle;
@@ -51,7 +52,6 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	}
 	.upload_details{
 		padding:5px;
-		margin-top:20px;
 		font-size:10pt;
 	}
 	.collapse{
@@ -80,18 +80,16 @@ if(!defined('IN_PassLicense')) die(); ?><html>
     
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
     <meta charset=utf-8 />
-   
-  </head>
-  <body>
-  
+</head>
+<body>
   <h1>PassLicense (botclasses.php)</h1>
 <div>
 
-<?php if(isset($_SESSION['result'])){ ?><div>
+<?php if(isset($_SESSION['result'])){ ?><div style="margin-bottom:10px">
 <?php	$result = $_SESSION['result'];
 	foreach($result as $key=>$item){
-		if($num%2 == 0)	$bg = 'DDD';
-		else $bg = 'EEE'; ?>
+		if($num%2 == 0)	$bg = $color_details_1;
+		else $bg = $color_details_2; ?>
 <div style="background:#<?= $bg ?>;margin:auto;padding:5px">
 <?php if($item['edit']['result'] == 'Success') { ?><a href="<?= $site_url ?><?= $item['edit']['title'] ?>"><b><?= $item['edit']['title'] ?>:</b> Success</a><?php }else{ ?><b><?= $key ?>:</b> Error<?php } ?>
 <label class="collapse" for="<?= $key ?>_details">[Details]</label>
@@ -112,19 +110,17 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	<?php foreach($categories_review as $cat){ ?>
 	<option value="<?= $cat ?>">
 <?php } ?></datalist>
-<input type="submit" value="&#8811;">&nbsp;
-<a href="<?= $uri_s[1] ?>"><?= $uri_s[2] ?></a>&nbsp;|&nbsp;<a href="<?= $uri_s[0] ?>&clear_cache">Clear cache</a>
+<input type="submit" value="&#8811;"><?php if(!empty($_GET['category'])){ ?>&nbsp;<a href="<?= $uri_s[1] ?>"><?= $uri_s[2] ?></a>&nbsp;|&nbsp;<a href="<?= $uri_s[0] ?>&clear_cache">Clear cache</a><?php } ?>
 </form>
-<?php if(!empty($_GET['category'])){ ?>
-<form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
+<?php if(!empty($_GET['category'])){ ?><form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
 <?php
 	if(!empty($pages)){
 		$num = 0;
 		foreach($pages as $page){
 			$page = str_replace(' ','_',$page);
 			if($num%2 == 0)
-			$bg = 'DDD';
-			else $bg = 'EEE';
+			$bg = $color_details_1;
+			else $bg = $color_details_2;
 		
 			$content = $wiki->GetPageContents($page,"text|wikitext|externallinks");
 			
@@ -148,9 +144,9 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				$external_thumburl = $external_info['thumburl'];
 				$text = str_replace('<a','<a target="'.urlencode($page).'"',$content['parse']['text']['*']);
 
-?><div style="background:#<?= $bg ?>;margin:auto;padding:5px">
-<input style="float:left !important" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>" />
-<label style="float:left;font-weight:bold" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
+?><div style="background:#<?= $bg ?>;margin:auto">
+<input style="float:left !important;margin:9px" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>" />
+<label style="float:left;font-weight:bold;width:97%;height:20px;margin:5px auto" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
 <input id="<?= urlencode($page) ?>_details" type="checkbox" />
 <div class="upload_details" id="<?= urlencode($page) ?>_details"> 
 	<div style="text-align:center;min-height:200px;margin:auto">
@@ -181,7 +177,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				<span style="display:table-cell">With:&nbsp;</span>
 				<span style="display:table-cell"><input style="width:400px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
-	<?php foreach($licenses_passed as $license){ ?>
+	<?php foreach($licenses_replace as $license){ str_replace('<site>',$photo_url,$license); ?>
 					<option value="<?= $license ?>">
 	<?php } ?>			</datalist>
 			</div>
@@ -198,10 +194,6 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:400px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
-				<datalist id="licenses_passed">
-	<?php foreach($licenses_passed as $license){ ?>
-					<option value="<?= $license ?>">
-	<?php } ?>			</datalist>
 			</div>
 		
 		</div>
@@ -217,16 +209,10 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:400px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
-	<?php foreach($licenses_replace as $license){ ?>
-					<option value="<?= $license ?>">
-	<?php } ?>			</datalist>
 			</div>
 		</div>
 	</div>
-	
-	
-	
-	
+
 	<div style="border:2px #000 dotted;width:49%;height:450px;float:left;overflow:auto">
 	<?= $text ?>
 	</div>
