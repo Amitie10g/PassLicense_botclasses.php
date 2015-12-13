@@ -400,6 +400,8 @@ class Wiki {
 			'text' => $data,
 			'token' => $this->token,
 			'summary' => $summary,
+			'nocreate' => '1',
+			'watchlist' => 'watch',
 			($minor?'minor':'notminor') => '1',
 			($bot?'bot':'notbot') => '1'
 		);
@@ -523,6 +525,7 @@ class Wiki {
 class PassLicense extends Wiki {
 
 	public $url;
+	public $site_url;
 	private $flickr_api_key;
 	private $ipernity_api_key;
 	private $flickr_licenses_blacklist;
@@ -542,6 +545,8 @@ class PassLicense extends Wiki {
 		$this->picasa_licenses_blacklist = $picasa_licenses_blacklist;
 		$this->flickr_api_key = $flickr_api_key;
 		$this->ipernity_api_key = $ipernity_api_key;
+		$this->site_url = parse_url($this->url);
+		$this->site_url = $this->site_url['scheme'].'://'.$this->site_url['host'].'/wiki/';
 	}
 	
 	/**
@@ -561,8 +566,10 @@ class PassLicense extends Wiki {
 		if(!empty($_SESSION['wiki_page_contents'][$page][$props])) $contents = $_SESSION['wiki_page_contents'][$page][$props];
 		else{
 			$contents = $this->query("?action=parse&format=php&prop=$props&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
+			$contents['parse']['text']['*'] = str_replace('<a','<a target="'.urlencode($page).'"',$contents['parse']['text']['*']);
+			$contents['parse']['text']['*'] = str_replace('href="/wiki/','href="'.$this->site_url,$contents['parse']['text']['*']);
 			$_SESSION['wiki_page_contents'][$page][$props] = $contents;
-		}	
+		}		
 		return $contents;
 	}
 
@@ -681,8 +688,12 @@ class PassLicense extends Wiki {
 		
 				$photo_id = $this->getPhotoID($url,3);
 				$photo_info = $this->getFlickrInfo($photo_id);
+				
+				if($photo_info['stat'] == 'ok'){					
+					
+					$photo_date_uploaded = strftime("%F %T",$photo_info['photo']['dates']['posted']);
+					$photo_date_taken = $photo_info['photo']['dates']['taken'];
 
-				if($photo_info['stat'] == 'ok'){
 					$photo_license = $photo_info['photo']['license'];
 					$photo_url = $photo_info['photo']['urls']['url'][0]['_content'];
 
@@ -706,10 +717,17 @@ class PassLicense extends Wiki {
 
 				if($photo_info['api']['status'] == 'ok'){
 					$photo_license = $photo_info['doc']['license'];
+					
 					if(in_array($photo_license,$this->ipernity_licenses_blacklist)) $allowed = false;
 					$license = $this->getIpernityLicense($photo_license);				
 					$thumburl = $this->getIpernityThumbURL($photo_info['doc']['thumbs']['thumb'],200);
 					$photo_url = $photo_info['doc']['link'];
+					
+					$photo_date_taken = $photo_info['doc']['dates']['created'];
+					$photo_date_uploaded = strftime("%F %T",substr($photo_info['doc']['dates']['posted_at'],0,10));
+					
+					//var_dump($photo_info);
+					
 				}else{
 					$license = false;
 					return false;
@@ -717,22 +735,35 @@ class PassLicense extends Wiki {
 				break;
 
 			case 'picasa_url':
+			
+				$service = 'Picasa';
+
 				$url_r = str_replace('#','/',$url);
 				$user = $this->getPhotoID($url_r,1);
 				$album = $this->getPhotoID($url_r,2);
 				$photo_id = $this->getPhotoID($url_r,3);
-				$result = $this->getPicasaInformation($user,$album,$photo_id);
-				$license = $result['gphoto$license']['name'];
-				if(in_array($result['gphoto$license']['id'],$this->picasa_licenses_blacklist)) $allowed = false;
-				$thumburl = $this->getPicasaThumbURL($result['icon']['$t']);
-				$photo_url = $url;
-				$service = 'Picasa';
+				$photo_info = $this->getPicasaInformation($user,$album,$photo_id);
+				if($result !== false){
+					$license = $photo_info['gphoto$license']['name'];
+					if(in_array($photo_info['gphoto$license']['id'],$this->picasa_licenses_blacklist)) $allowed = false;
+					$thumburl = $this->getPicasaThumbURL($photo_info['icon']['$t']);
+					$photo_url = $url;
+				
+					$photo_date_taken = strftime("%F %T",substr($photo_info['exif$tags']['exif$time']['$t'],0,10));
+					$photo_date_uploaded = strftime("%F %T",substr($photo_info['gphoto$timestamp']['$t'],0,10));
+				}
 				break;			
 			// Add more services here
 			default: $license = false;
 		}
 
-		return array('service'=>$service,'license'=>$license,'thumburl'=>$thumburl,'url'=>$photo_url,'allowed'=>$allowed);
+		return array('service'=>$service,
+			     'license'=>$license,
+			     'date_uploaded'=>$photo_date_uploaded,
+			     'date_taken'=>$photo_date_taken,
+			     'thumburl'=>$thumburl,
+			     'url'=>$photo_url,
+			     'allowed'=>$allowed);
 	}
 
 	/**
@@ -888,6 +919,7 @@ class PassLicense extends Wiki {
 		else{
 			$url    = "https://www.ipernity.com/api/doc.get/php/e";
 			$query  = "?doc_id=$id&api_key=$this->ipernity_api_key";
+				
 			$result = $this->query($query,null,null,$url);
 			$_SESSION['ipernity_info'][$id] = $result;
 		}

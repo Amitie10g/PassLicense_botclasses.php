@@ -76,6 +76,10 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 	.details{
 		float:right;
 	}
+	.img_bg{
+		background:#fff url("img_bg.png") repeat;
+	}
+	
     </style>
     
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
@@ -91,7 +95,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		if($num%2 == 0)	$bg = $color_details_1;
 		else $bg = $color_details_2; ?>
 <div style="background:#<?= $bg ?>;margin:auto;padding:5px">
-<?php if($item['edit']['result'] == 'Success') { ?><a href="<?= $site_url ?><?= $item['edit']['title'] ?>"><b><?= $item['edit']['title'] ?>:</b> Success</a><?php }else{ ?><b><?= $key ?>:</b> Error<?php } ?>
+<?php if($item['edit']['result'] == 'Success') { ?><a href="<?= $wiki->site_url ?><?= $item['edit']['title'] ?>"><b><?= $item['edit']['title'] ?>:</b> Success</a><?php }else{ ?><b><?= $key ?>:</b> Error<?php } ?>
 <label class="collapse" for="<?= $key ?>_details">[Details]</label>
 <input id="<?= $key ?>_details" type="checkbox">
 <div class="upload_details" id="<?= $key ?>_details"> 
@@ -130,6 +134,9 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			$external_license = $external_info['license'];
 			$allowed = $external_info['allowed'];
 			
+			if(!empty($external_info['date_taken'])) $date = $external_info['date_taken'];
+			else $date =  $external_info['date_uploaded'];
+			
 			// Hide results from unallowed licenses, or show them by passing parameter
 			if($allowed !== false || isset($_GET['show_blacklisted'])){
 			
@@ -142,23 +149,32 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				$external_service = $external_info['service'];
 				$thumburl_big = $wiki->getThumbURL($page,600);
 				$external_thumburl = $external_info['thumburl'];
-				$text = str_replace('<a','<a target="'.urlencode($page).'"',$content['parse']['text']['*']);
+				$text = $content['parse']['text']['*'];
 
 ?><div style="background:#<?= $bg ?>;margin:auto">
 <input style="float:left !important;margin:9px" type="checkbox" name="pagename[]" value="<?= urlencode($page) ?>" />
 <label style="float:left;font-weight:bold;width:97%;height:20px;margin:5px auto" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
 <input id="<?= urlencode($page) ?>_details" type="checkbox" />
 <div class="upload_details" id="<?= urlencode($page) ?>_details"> 
-	<div style="text-align:center;min-height:200px;margin:auto">
-		<div style="display:inline-table">
-			<a href="<?= $site_url ?><?= urlencode($page) ?>">
-			<img src="<?= $thumburl ?>"></a>
-			<div><a href="<?= $thumburl_big ?>" target="<?= urlencode($page) ?>">Bigger</a> | <a target="_blank" href="https://www.google.com/searchbyimage?image_url=<?= $thumburl_big ?>">Google Image search</a></div>
+	<div style="text-align:center;min-height:200px;margin:auto;margin-bottom:10px">
+		<div style="display:inline-table;margin-bottom:-50px">
+			<div class="img_bg">
+				<a href="<?= $wiki->site_url ?><?= urlencode($page) ?>" target="_blank"><img src="<?= $thumburl ?>"></a>
+			</div>
+			<div style="position:relative;top:-27px;background-color: rgba(204, 238, 255, 0.5);padding:5px;font-weight:bold">
+				<a href="<?= $thumburl_big ?>" target="<?= urlencode($page) ?>">Bigger</a>&nbsp;|&nbsp;
+				<a target="_blank" href="https://www.google.com/searchbyimage?image_url=<?= $thumburl_big ?>">Google Image search</a>
+			</div>
 		</div>
-		<?php if(!empty($external_thumburl)){ ?><div style="display:inline-table">
-			<a href="<?= $photo_url ?>" target="<?= urlencode($page) ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
-			<div>Picture found at <?= ucfirst($external_service) ?>
-			<?php if(!empty($external_license)){ ?> - <?= $external_license ?><?php } ?></div>
+		<?php if(!empty($external_thumburl)){ ?><div style="display:inline-table;margin-bottom:-50px">
+			<div class="img_bg">
+				<a href="<?= $photo_url ?>" target="<?= urlencode($page) ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
+			</div>
+			<div style="position:relative;top:-61px;background-color: rgba(204, 238, 255, 0.5);padding:5px">
+			<b>Picture found at <?= ucfirst($external_service) ?></b><br>
+			<b>Date:</b> <?= $date ?>
+			<?php if(!empty($external_license)){ ?><br>
+			<b>License:</b> <?= $external_license ?><?php } ?></div>
 		</div><?php } ?>
 	</div>
 
@@ -166,7 +182,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
 				<span style="display:table-cell">Replace:&nbsp;</span>
-				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<span style="display:table-cell"><input style="width:380px" type="text" name="replace_1[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
 					<option value="<?= $template ?>">
@@ -175,7 +191,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell">With:&nbsp;</span>
-				<span style="display:table-cell"><input style="width:400px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<span style="display:table-cell"><input style="width:380px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
 	<?php foreach($licenses_replace as $license){ str_replace('<site>',$photo_url,$license); ?>
 					<option value="<?= $license ?>">
@@ -185,7 +201,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		</div>
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
-				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<span style="display:table-cell"><input style="width:380px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
 					<option value="<?= $template ?>">
@@ -193,13 +209,13 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				</datalist>
 			</div>
 			<div style="display:table-row">
-				<span style="display:table-cell"><input style="width:400px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<span style="display:table-cell"><input style="width:380px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 			</div>
 		
 		</div>
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
-				<span style="display:table-cell"><input style="width:400px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
+				<span style="display:table-cell"><input style="width:380px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
 					<option value="<?= $template ?>">
@@ -207,7 +223,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				</datalist>
 			</div>
 			<div style="display:table-row">
-				<span style="display:table-cell"><input style="width:400px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
+				<span style="display:table-cell"><input style="width:380px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
 			</div>
 		</div>
