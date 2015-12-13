@@ -724,10 +724,7 @@ class PassLicense extends Wiki {
 					$photo_url = $photo_info['doc']['link'];
 					
 					$photo_date_taken = $photo_info['doc']['dates']['created'];
-					$photo_date_uploaded = strftime("%F %T",substr($photo_info['doc']['dates']['posted_at'],0,10));
-					
-					//var_dump($photo_info);
-					
+					$photo_date_uploaded = strftime("%F %T",substr($photo_info['doc']['dates']['posted_at'],0,10));				
 				}else{
 					$license = false;
 					return false;
