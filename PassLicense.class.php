@@ -273,7 +273,7 @@ class Wiki {
 		if (isset($res['error'])) return false;
 	
 		foreach($res['query']['categorymembers'] as $page) {
-			$title = $page['title'];
+			$title = str_replace(' ','_',$page['title']);
 			// For a strange reason, "&cmtype=file&cmsort=timestamp" does not return File:-only reults
 			if(preg_match('/^(File:){1}[\p{L}\p{N}\p{P}\p{S}_ ]+$/',$title) >= 1) $pages[] = $title;
 		}
@@ -583,6 +583,8 @@ class PassLicense extends Wiki {
 	function getThumbURL($page,$width=null,$height=null){
 		if(!is_numeric($width)) $width = '2000';
 		if(!is_numeric($height)) $height = '2000';
+		
+		$page = urlencode($page);
 
 		if(!empty($_SESSION['thumburl'][$page][$width.'_'.$height])) $thumburl = $_SESSION['thumburl'][$page][$width.'_'.$height];
 		else{
@@ -594,6 +596,7 @@ class PassLicense extends Wiki {
 
 			$_SESSION['thumburl'][$page][$width.'_'.$height] = $thumburl;
 		}
+		
 		return $thumburl;
 	}
 
@@ -740,15 +743,20 @@ class PassLicense extends Wiki {
 				$album = $this->getPhotoID($url_r,2);
 				$photo_id = $this->getPhotoID($url_r,3);
 				$photo_info = $this->getPicasaInformation($user,$album,$photo_id);
+				
 				if($result !== false){
 					$license = $photo_info['gphoto$license']['name'];
 					if(in_array($photo_info['gphoto$license']['id'],$this->picasa_licenses_blacklist)) $allowed = false;
 					$thumburl = $this->getPicasaThumbURL($photo_info['icon']['$t']);
 					$photo_url = $url;
-				
-					$photo_date_taken = strftime("%F %T",substr($photo_info['exif$tags']['exif$time']['$t'],0,10));
-					$photo_date_uploaded = strftime("%F %T",substr($photo_info['gphoto$timestamp']['$t'],0,10));
+					
+					if(is_numeric($photo_info['exif$tags']['exif$time']['$t'])) $photo_date_taken = strftime("%F %T",substr($photo_info['exif$tags']['exif$time']['$t']));
+					else $photo_date_taken = $photo_info['exif$tags']['exif$time']['$t'];
+					
+					if(is_numeric($photo_info['gphoto$timestamp']['$t'])) $photo_date_uploaded = strftime("%F %T",substr($photo_info['gphoto$timestamp']['$t'],0,10));
+					else $photo_date_uploaded = $photo_info['gphoto$timestamp']['$t'];
 				}
+				
 				break;			
 			// Add more services here
 			default: $license = false;
@@ -832,16 +840,18 @@ class PassLicense extends Wiki {
 	 * @return the information of the given file as array
 	**/
 	function getFlickrInfo($id){
-	if(!empty($_SESSION['flickr_info'][$id])) $result = $_SESSION['flickr_info'][$id];
-	else{
-		$url = "https://api.flickr.com/services/rest/";
-		$query = "?method=flickr.photos.getInfo&format=php_serial&api_key=$this->flickr_api_key&photo_id=$id";
-		$result = $this->query($query,null,null,$url);
-		$_SESSION['flickr_info'][$id] = $result;
-	}
+		if(!is_numeric($id)) return false;
+	
+		if(!empty($_SESSION['flickr_info'][$id])) $result = $_SESSION['flickr_info'][$id];
+		else{
+			$url = "https://api.flickr.com/services/rest/";
+			$query = "?method=flickr.photos.getInfo&format=php_serial&api_key=$this->flickr_api_key&photo_id=$id";
+			$result = $this->query($query,null,null,$url);
+			$_SESSION['flickr_info'][$id] = $result;
+		}
 
-	if($result['stat'] == 'ok') return $result;
-	else return false;
+		if($result['stat'] == 'ok') return $result;
+		else return false;
 	}
 
 	/**
@@ -850,28 +860,29 @@ class PassLicense extends Wiki {
 	 * @return the license text as string
 	**/
 	function getFlickrLicense($id){
+		if(!is_numeric($id)) return false;
 	
-	if(!empty($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
-	else{
-		$url    = "https://api.flickr.com/services/rest/";
-		$query  = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$this->flickr_api_key";
-		$result = $this->query($query,null,null,$url);
-		$_SESSION['flickr_licenses'] = $result;
-	}
-	
-	if($result['stat'] == 'ok'){
-		$licenses = $result['licenses']['license'];
-
-		foreach($licenses as $license){
-			if($id == $license['id']){
-				$name = $license['name'];
-				break;
-			}
+		if(!empty($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
+		else{
+			$url    = "https://api.flickr.com/services/rest/";
+			$query  = "?method=flickr.photos.licenses.getInfo&format=php_serial&api_key=$this->flickr_api_key";
+			$result = $this->query($query,null,null,$url);
+			$_SESSION['flickr_licenses'] = $result;
 		}
-		if(!empty($name)) return $name;
-		else return false;
+	
+		if($result['stat'] == 'ok'){
+			$licenses = $result['licenses']['license'];
+
+			foreach($licenses as $license){
+				if($id == $license['id']){
+					$name = $license['name'];
+					break;
+				}
+			}
+			if(!empty($name)) return $name;
+			else return false;
 		
-	}else return false;
+		}else return false;
 	}
 
 	/**
