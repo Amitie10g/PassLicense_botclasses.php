@@ -524,7 +524,6 @@ class Wiki {
  * @param $ipernity_api_key The Ipernity API key (optional)
  **/
 class PassLicense extends Wiki {
-
 	public $url;
 	public $site_url;
 	private $flickr_api_key;
