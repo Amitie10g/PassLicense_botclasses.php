@@ -457,7 +457,7 @@ class Wiki {
 	 * Find a string
 	 * @param $page The page we're working with.
 	 * @param $string The string that you want to find.
-	 * @return bool Value (1 found and 0 not-found)
+	 * @return bool value (1 found and 0 not-found)
 	 **/
 	function findstring( $page, $string )
 	{
