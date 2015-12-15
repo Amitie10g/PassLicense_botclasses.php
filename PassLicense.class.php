@@ -477,23 +477,23 @@ class Wiki {
 	 **/
 	function replacestring($page,$string,$newstring,$regex=false){
 		$data = $this->getpage($page);
-	if($data != false){
-		if(regex === true){
-			if(is_array($string) && is_array($newstring)){
-				foreach($string as $key=>$str){
-					$data = preg_replace($str,$newstring[$key],$data);
-				}
+		if($data != false){
+			if(regex === true){
+				if(is_array($string) && is_array($newstring)){
+					foreach($string as $key=>$str){
+						$data = preg_replace($str,$newstring[$key],$data);
+					}
 
-			}elseif(is_string($string) && is_string($newstring)){
-				$data = preg_replace($newstring,$string,$data);
+				}elseif(is_string($string) && is_string($newstring)){
+					$data = preg_replace($newstring,$string,$data);
+				}else{
+					$data = false;
+				}
 			}else{
-				$data = false;
+				$data = str_replace($string,$newstring,$data);
 			}
-		}else{
-			$data = str_replace($string,$newstring,$data);
+			return $data;
 		}
-		return $data;
-	}
 	}
 	
 	/**
