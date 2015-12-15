@@ -503,12 +503,12 @@ class Wiki {
 	 * @return the searched (NULL if the template has not been found)
 	 **/
 	function gettemplate($page,$template){
-	   $data = $this->getpage($page);
-	   $template = preg_quote( $template, " " );
-	   $r = "/{{" . $template . "(?:[^{}]*(?:{{[^}]*}})?)+(?:[^}]*}})?/i";
-	   preg_match_all( $r, $data, $matches );
-	   if( isset( $matches[0][0])) return $matches[0][0];
-	   else return null;
+		$data = $this->getpage($page);
+		$template = preg_quote( $template, " " );
+		$r = "/{{" . $template . "(?:[^{}]*(?:{{[^}]*}})?)+(?:[^}]*}})?/i";
+		preg_match_all( $r, $data, $matches );
+		if( isset( $matches[0][0])) return $matches[0][0];
+		else return null;
 	}
 }
 
