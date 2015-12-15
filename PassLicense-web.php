@@ -33,9 +33,11 @@ set_time_limit(300);
 
 session_start();
 
-$wiki_url_headers = get_headers($wiki_url);
+// First, check if the Wiki is accessible
+$wiki_url_headers = @get_headers($wiki_url);
 if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
-	// License tags to search inside the pages
+
+	// License tags to search inside the pages (not used for now)
 	$licenses_search = array('LicenseReview',
 				 'Flickrreview',
 				 'Ipernityreview',
@@ -57,29 +59,33 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 
 	// Categories to list (without the Category: prefix)
 	$categories_review = array('License_review_needed',
-				   'Flickr images needing human review',
-				   'Picasa Web Albums files needing human review',
-				   'Panoramio images needing human review',
-				   'Ipernity review needed',
-				   'Unreviewed photos from indiannavy.nic.in',
-				   'Filmitadka review needed',
-				   'Fotopolska review needed',
-				   'Files from Freesound.org lacking source',
-				   'Images from HatenaFotolife needing License Review',
-				   'Unreviewed files from National Repository of Open Educational Resources',
-				   'OpenPhoto review needed',
-				   'Lemill Web Albums files needing human review',
-				   'Unreviewed files from Bollywood Hungama');
+				   'Flickr_images_needing_human_review',
+				   'Flickr_public_domain_images_needing_human_review',
+				   'Picasa_Web_Albums_files_needing_human_review',
+				   'Panoramio_images_needing_human_review',
+				   'Ipernity_review_needed',
+				   'Unreviewed_photos_from_indiannavy.nic.in',
+				   'Filmitadka_review_needed',
+				   'Fotopolska_review_needed',
+				   'Files_from_Freesound.org_lacking_source',
+				   'Images_from_HatenaFotolife_needing_License_Review',
+				   'Unreviewed_files_from_National_Repository_of_Open_Educational_Resources',
+				   'OpenPhoto_review_needed',
+				   'Lemill_Web_Albums_files_needing_human_review',
+				   'Unreviewed_files_from_Bollywood_Hungama');
 
-	// The licenses ID not allowed in the wiki, according to
+	// The licenses ID not allowed in the wiki, according to the license codes returned from API
+
 	// https://www.flickr.com/services/api/explore/flickr.photos.licenses.getInfo
 	$flickr_licenses_blacklist = array(0,2,3,6,10);
 
-	// Same as above, for Ipernity. See http://www.ipernity.com/help/api/method/doc.setLicense
+	// http://www.ipernity.com/help/api/method/doc.setLicense
 	$ipernity_licenses_blacklist = array(0,3,5,7,11);
 
+	// License codes from Picasa are not documented, but can be extracted for feed
 	$picasa_licenses_blacklist = array(0,1,2,3,6);
 
+	// Call PassLicense
 	require_once('PassLicense.class.php');
 	$wiki = new PassLicense($wiki_url,
 				$flickr_licenses_blacklist,
@@ -87,9 +93,11 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 				$picasa_licenses_blacklist,
 				$flickr_api_key,
 				$ipernity_api_key);
-		
-	$wiki->setUserAgent('PassLicense/0.9 (https://github.com/Amitie10g/PassLicense_botclasses.php; davidkingnt@gmail.com) Botclasses.php/1.0');
+	
+	// Set up the User agent (you can change it but avoid the UA from browsers)	
+	$wiki->setUserAgent('PassLicense/0,91 (https://github.com/Amitie10g/PassLicense_botclasses.php; davidkingnt@gmail.com) Botclasses.php/1.0');
 
+	// Commit changes mode
 	if(isset($_GET['pass'])){
 
 		$pages = $_POST['pagename'];
@@ -149,13 +157,16 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 		header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
 		die();
 
+	// Clear cache mode
 	}elseif(isset($_GET['clear_cache'])){
 		$category = $_GET['category'];
 		if(isset($_GET['show_blacklisted'])) $blacklisted = "&show_blacklisted";
 		session_destroy();
 		header('Location: '.$_SERVER['PHP_SELF']."?category=$category$blacklisted");
 		die();
-	}else{
+
+	// Default mode
+	}else{		
 		// Validating the colour values
 		$color_body_bg = $wiki->hexColor($color_body_bg);
 		$color_details_1 = $wiki->hexColor($color_details_1);

@@ -519,6 +519,7 @@ class Wiki {
  * @param $url The Project URL
  * @param $flickr_licenses_blacklist The Flickr Licenses blacklist array
  * @param $ipernity_licenses_blacklist The Ipernity Licenses blacklist array
+ * @param $picasa_licenses_blacklist The Picasa Licenses blacklist array
  * @param $flickr_api_key The Flickr API key (optional)
  * @param $ipernity_api_key The Ipernity API key (optional)
  **/
@@ -619,10 +620,10 @@ class PassLicense extends Wiki {
 	}
 	
 	/**
-	 * Get information about external sources from an URL. URL is parsed using regex, and the information
-	 * is obtained using the external services API (for now, only Flickr and Ipernity API are supported,
-	 * and requires a an API key from them).
-	 * @params $url_g The URL to be parsed
+	 * Get information about external sources from an URL. URL is parsed using regex,
+	 * the relevant components are extracted from the first valid URL, and then the
+	 * information is obtained using the external services API.
+	 * @params $url_g The URL to be parsed, either string or array
 	 * @return an array with the following elements:
 	 *   'service'  The external service found
 	 *   'license'  The license text (eg. Creative Commons Attribution)
@@ -630,43 +631,62 @@ class PassLicense extends Wiki {
 	 *              with the file found at the Wiki
 	 *   'url'      The actual URL to the file located at the external service
 	 *   'allowed'  If the license is allowed at the Wiki (false if not)
+	 * If no valid URL found, return false.
 	**/
 	function getExternalInfo($url_g){
 	
 		if(is_array($url_g)){
 			foreach($url_g as $url){
+
+				// Flickr (normal link)
 				if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url) >= 1){
 					$url = $url;
 					$service = 'flickr';
 					break;
+
+				// Flcikr (short URL)
+				}elseif(preg_match('/^(http|https){1}\:\/\/flic\.kr\/p\/[\w]+$/',$url) >= 1){
+					$url = $url;
+					$service = 'flickr_short';
+
+				// Ipernity
 				}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(ipernity\.com\/doc\/){1}[\w@]+\/[\w@]+/',$url) >= 1){
 					$url = $url;
 					$service = 'ipernity';
 					break;
+
 				// Picasa (normal link)
 				}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/[\p{L}\p{N}]+\/[\p{L}\p{N}]+#[\p{N}]+$/',$url) >= 1){
 					$url = $url;
 					$service = 'picasa_url';
 					break;
-				// Picasa (share link)
-				}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/lh\/photo\/[\p{L}\p{N}]+/',$url) >= 1){
-					$url = $url;
-					$service = 'picasa_share';
-					break;
+
 				// Picasa (Google+ link)
 				}elseif(preg_match('/^(http|https){1}\:\/\/plus\.google\.com\/photos\/\+[\p{L}\p{N}%]+\/albums\/[\p{N}]+\/[\p{N}]+\?pid\=[\p{N}]+&oid\=[\p{N}]+$/',$url) >= 1){
 					$url = $url;
 					$service = 'picasa_gplus';
 					break;
+
 				}// Add more services here
 			}
 		}else{
+
+			// Flickr
 			if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'flickr';
+
+			// Flcikr (short URL)
+			}elseif(preg_match('/^(http|https){1}\:\/\/flic\.kr\/p\/[\w]+$/',$url_g) >= 1){
+				$url = $url_g;
+				$service = 'flickr_short';
+
+			// Ipernity
 			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(ipernity\.com\/doc\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'flickr';
+
+			// Picasa (normal link)
 			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/[\p{L}\p{N}]+\/[\p{L}\p{N}]+#[\p{N}]+$/',$url) >= 1){
 				$url = $url_g;
 				$service = 'picasa_url';
@@ -683,13 +703,22 @@ class PassLicense extends Wiki {
 		if(empty($url)) return false;
 
 		switch($service){
+			case 'flickr_short':
 			case 'flickr':
 
 				if(empty($this->flickr_api_key)) return false;
-				
-				$service = 'Flickr';
-		
-				$photo_id = $this->getPhotoID($url,3);
+
+				switch($service){
+					case 'flickr_short':
+						$alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+						$photo_id = $this->getPhotoID($url,2);
+						$photo_id = $this->flickrBase58Decode($photo_id,$alphabet);
+						break;
+					default:
+						$photo_id = $this->getPhotoID($url,3);
+						break;
+				}
+
 				$photo_info = $this->getFlickrInfo($photo_id);
 				
 				if($photo_info['stat'] == 'ok'){					
@@ -698,22 +727,20 @@ class PassLicense extends Wiki {
 					$photo_date_taken = $photo_info['photo']['dates']['taken'];
 
 					$photo_license = $photo_info['photo']['license'];
-					$photo_url = $photo_info['photo']['urls']['url'][0]['_content'];
-
 					if(in_array($photo_license,$this->flickr_licenses_blacklist)) $allowed = false;
-
 					$license = $this->getFlickrLicense($photo_license);
+
+					$photourl = $photo_info['photo']['urls']['url'][0]['_content'];
 					$thumburl = $this->getFlickrThumbURL($photo_id);
 
-				}else{
-					$license = false;
-					return false;
-				}
+					$service = 'Flickr';
+
+				}else $service = false;
 				break;
 
 			case 'ipernity':
-
-				$service = 'Ipernity';
+			
+				if(empty($this->ipernity_api_key)) return false;
 
 				$photo_id = $this->getPhotoID($url,3);
 				$photo_info = $this->getIpernityInfo($photo_id,$this->ipernity_api_key);
@@ -723,21 +750,20 @@ class PassLicense extends Wiki {
 					
 					if(in_array($photo_license,$this->ipernity_licenses_blacklist)) $allowed = false;
 					$license = $this->getIpernityLicense($photo_license);				
+
 					$thumburl = $this->getIpernityThumbURL($photo_info['doc']['thumbs']['thumb'],200);
-					$photo_url = $photo_info['doc']['link'];
+					$photourl = $photo_info['doc']['link'];
 					
 					$photo_date_taken = $photo_info['doc']['dates']['created'];
 					$photo_date_uploaded = strftime("%F %T",substr($photo_info['doc']['dates']['posted_at'],0,10));				
-				}else{
-					$license = false;
-					return false;
-				}
+
+					$service = 'Ipernity';
+
+				}else $service = false;
 				break;
 
 			case 'picasa_url':
 			
-				$service = 'Picasa';
-
 				$url_r = str_replace('#','/',$url);
 				$user = $this->getPhotoID($url_r,1);
 				$album = $this->getPhotoID($url_r,2);
@@ -747,27 +773,33 @@ class PassLicense extends Wiki {
 				if($result !== false){
 					$license = $photo_info['gphoto$license']['name'];
 					if(in_array($photo_info['gphoto$license']['id'],$this->picasa_licenses_blacklist)) $allowed = false;
+
 					$thumburl = $this->getPicasaThumbURL($photo_info['icon']['$t']);
-					$photo_url = $url;
+					$photourl = $url;
 					
-					if(is_numeric($photo_info['exif$tags']['exif$time']['$t'])) $photo_date_taken = strftime("%F %T",substr($photo_info['exif$tags']['exif$time']['$t']));
+					if(is_numeric($photo_info['exif$tags']['exif$time']['$t'])) $photo_date_taken = strftime("%F %T",substr($photo_info['exif$tags']['exif$time']['$t'],0,10));
 					else $photo_date_taken = $photo_info['exif$tags']['exif$time']['$t'];
 					
 					if(is_numeric($photo_info['gphoto$timestamp']['$t'])) $photo_date_uploaded = strftime("%F %T",substr($photo_info['gphoto$timestamp']['$t'],0,10));
 					else $photo_date_uploaded = $photo_info['gphoto$timestamp']['$t'];
-				}
-				
+
+					$service = 'Picasa';
+
+				}else $service = false;
 				break;			
 			// Add more services here
-			default: $license = false;
+			default:
+				$service = false;
+				break;
 		}
-
-		return array('service'=>$service,
+		
+		if($service == false) return false;
+		else return array('service'=>$service,
 			     'license'=>$license,
 			     'date_uploaded'=>$photo_date_uploaded,
 			     'date_taken'=>$photo_date_taken,
 			     'thumburl'=>$thumburl,
-			     'url'=>$photo_url,
+			     'photourl'=>$photourl,
 			     'allowed'=>$allowed);
 	}
 
@@ -828,6 +860,25 @@ class PassLicense extends Wiki {
 		elseif($bg === true && preg_match('/^([0-9a-fA-F]{3}){1,2}$/',$color == 0) && $bg == false) $color = 'fff';
 
 		return $color;
+	}
+	
+	/**
+	 * Decode a base58 encoded Flickr shorten URL
+	 * @param $num The sorten ID
+	 * @param $alphabet The alphabet where find
+	 * @return the ID as base10
+	**/
+	function flickrBase58Decode($num,$alphabet) {
+		$decoded = 0;
+		$multi = 1;
+		while (strlen($num) > 0) {
+			$digit = $num[strlen($num)-1];
+			$decoded += $multi * strpos($alphabet, $digit);
+			$multi = $multi * strlen($alphabet);
+			$num = substr($num, 0, -1);
+		}
+
+		return $decoded;
 	}
 
 	/**
@@ -892,25 +943,25 @@ class PassLicense extends Wiki {
 	 * @return the numeric ID as string
 	**/   
 	function getFlickrThumbURL($id,$max_height=200){
-	if(!empty($_SESSION['flickr_thumburl'][$id])) $result = $_SESSION['flickr_thumburl'][$id];
-	else{
-		$url    = "https://api.flickr.com/services/rest/";
-		$query  = "?method=flickr.photos.getSizes&format=php_serial&api_key=$this->flickr_api_key&photo_id=$id";
-		$result = $this->query($query,null,null,$url);
-		$_SESSION['flickr_thumburl'][$id] = $result;
-	}
-	
-	if($result['stat'] == 'ok'){
-		$get_sizes = $result['sizes']['size'];
-		
-		foreach($get_sizes as $size){
-			$sizes[] = $size['height'];
+		if(!empty($_SESSION['flickr_thumburl'][$id])) $result = $_SESSION['flickr_thumburl'][$id];
+		else{
+			$url    = "https://api.flickr.com/services/rest/";
+			$query  = "?method=flickr.photos.getSizes&format=php_serial&api_key=$this->flickr_api_key&photo_id=$id";
+			$result = $this->query($query,null,null,$url);
+			$_SESSION['flickr_thumburl'][$id] = $result;
 		}
-		
-		$best_fit = $this->bestFit($max_height,$sizes,true);
 	
-		return $get_sizes[$best_fit]['source'];
-	}else return false;	
+		if($result['stat'] == 'ok'){
+			$get_sizes = $result['sizes']['size'];
+		
+			foreach($get_sizes as $size){
+				$sizes[] = $size['height'];
+			}
+		
+			$best_fit = $this->bestFit($max_height,$sizes,true);
+	
+			return $get_sizes[$best_fit]['source'];
+		}else return false;	
 	}
 
 	/**

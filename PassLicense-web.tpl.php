@@ -145,7 +145,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				$wikitext = $content['parse']['wikitext']['*'];
 				$templates = $wiki->getTemplates($wikitext,$licenses);			
 				$thumburl = $wiki->getThumbURL($page,null,190);
-				$photo_url = $external_info['url'];
+				$photo_url = $external_info['photourl'];
 				$external_service = $external_info['service'];
 				$thumburl_big = $wiki->getThumbURL($page,600);
 				$external_thumburl = $external_info['thumburl'];
@@ -170,7 +170,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			<div class="img_bg">
 				<a href="<?= $photo_url ?>" target="<?= urlencode($page) ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
 			</div>
-			<div style="position:relative;top:-61px;background-color: rgba(204, 238, 255, 0.5);padding:5px">
+			<div style="position:relative;top:-51px;background-color: rgba(204, 238, 255, 0.5)">
 			<b>Picture found at <?= ucfirst($external_service) ?></b><br>
 			<b>Date:</b> <?= $date ?>
 			<?php if(!empty($external_license)){ ?><br>
@@ -186,45 +186,35 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				<datalist id="tags_<?= urlencode($page) ?>">
 	<?php foreach($templates as $template){ ?>
 					<option value="<?= $template ?>">
-	<?php } ?>			<option value="<?= $photo_url ?>">
+	<?php } foreach($external_links as $link){ if(preg_match('/^((http|https){1}\:\/\/){1}[\p{L}\p{N}\.]+\//',$link) >= 1){ $link_e[] = $link ?>
+					<option value="<?= $link ?>"><?php } } ?>
 				</datalist>
+	
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell">With:&nbsp;</span>
 				<span style="display:table-cell"><input style="width:380px" type="text" name="with_1[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 				<datalist id="licenses_passed">
-	<?php foreach($licenses_replace as $license){ str_replace('<site>',$photo_url,$license); ?>
-					<option value="<?= $license ?>">
-	<?php } ?>			</datalist>
+	<?php foreach($licenses_replace as $license){ ?>
+					<option value="<?= str_replace('<site>',$link_e[0],$license) ?>">
+	<?php } ?>
+				</datalist>
 			</div>
-		
 		</div>
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:380px" type="text" name="replace_2[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
-				<datalist id="tags_<?= urlencode($page) ?>">
-	<?php foreach($templates as $template){ ?>
-					<option value="<?= $template ?>">
-	<?php } ?>			<option value="<?= $photo_url ?>">
-				</datalist>
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:380px" type="text" name="with_2[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
 			</div>
-		
 		</div>
 		<div style="display:table-cell;padding:5px">
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:380px" type="text" name="replace_3[<?= urlencode($page) ?>]" novalidate list="tags_<?= urlencode($page) ?>"></span>
-				<datalist id="tags_<?= urlencode($page) ?>">
-	<?php foreach($templates as $template){ ?>
-					<option value="<?= $template ?>">
-	<?php } ?>			<option value="<?= $photo_url ?>">
-				</datalist>
 			</div>
 			<div style="display:table-row">
 				<span style="display:table-cell"><input style="width:380px" type="text" name="with_3[<?= urlencode($page) ?>]" novalidate list="licenses_passed"></span>
-				<datalist id="licenses_passed">
 			</div>
 		</div>
 	</div>
