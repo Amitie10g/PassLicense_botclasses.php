@@ -52,7 +52,7 @@
  * @author Cobi
  * @property $ch The cURL class reference
  * @property $uid The cURL UID object
- * @property $cookie_jar The cURL cookie_jar object 
+ * @property $cookie_jar The cURL cookie_jar object
  * @property $postfollowredirs
  * @property $getfollowredirs
  * @property $quiet
@@ -76,7 +76,7 @@ class http {
 	  * @return array
 	 **/
 	public function http_code(){
-		return curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
+		return curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 	}
 
 	/**
@@ -206,7 +206,7 @@ class Wiki {
 	  * This is the constructor.
 	  * @param $url The project and API URL
 	  * @param $hu
-	  * @param $hp 
+	  * @param $hp
 	  * @return void
 	 **/
 	function __construct ($url='https://commons.wikimedia.org/w/api.php',$hu=null,$hp=null){
@@ -240,7 +240,7 @@ class Wiki {
 	function setUserAgent($userAgent){
 		$this->http->userAgent = $userAgent;
 	}
-	
+
 	/**
 	  * Set/change the http header.
 	  * @param $httpHeader The http header.
@@ -268,7 +268,7 @@ class Wiki {
 	function query($query,$post=null,$repeat=null,$url=null){
 
 		if(empty($url)) $url = $this->url;
-	
+
 		if($post==null) $ret = $this->http->get($url.$query);
 		else $ret = $this->http->post($url.$query,$post);
 		if($this->http->http_code() != "200"){
@@ -282,7 +282,7 @@ class Wiki {
 		}
 		return unserialize( $ret );
 	}
-	
+
 	/**
 	 * Gets the content of a page. Returns false on error.
 	 * Use getPageContents() as alternative to get the page in multiple formats
@@ -327,17 +327,17 @@ class Wiki {
 	 * @return array The category ID.
 	**/
 	function categorymembers($category,$limit=10,$continue=null,$subcat=false){
-	
+
 		$res = $this->query('?action=query&list=categorymembers&cmtype=file&cmsort=timestamp&cmdir=newer&format=php&cmtitle='.urlencode($category).'&cmlimit='.$limit.$continue);
-			
+
 		if (isset($res['error'])) return false;
-	
+
 		foreach($res['query']['categorymembers'] as $page){
 			$title = str_replace(' ','_',$page['title']);
 			// For a strange reason, "&cmtype=file&cmsort=timestamp" does not return File:-only reults
 			if(preg_match('/^(File:){1}[\p{L}\p{N}\p{P}\p{S}_ ]+$/',$title) >= 1) $pages[] = $title;
 		}
-	
+
 		// Previous and Next page (aka. Continue in the MediaWiki API) rewriten, and in developement
 		// For now, the function will return just the members inside the limit of 250
 		return $pages;
@@ -402,7 +402,7 @@ class Wiki {
 	 * crappy hack to allow users to use cookies from old sessions.
 	 * @param $data The data to be parsed.
 	 * @return void
-	 **/ 
+	 **/
 	function setLogin($data){
 		$this->http->cookie_jar = array(
 		$data['cookieprefix'].'UserName' => $data['lgusername'],
@@ -499,7 +499,7 @@ class Wiki {
 				return false;
 		}
 	}
- 
+
 	/**  BMcN 2012-09-16
 	 * Retrieve a media file's uploader.
 	 * @param $page The "File:" page
@@ -562,7 +562,7 @@ class Wiki {
 			return $data;
 		}
 	}
-	
+
 	/**
 	 * Get a template from a page
 	 * @param $page The page we're working with
@@ -616,7 +616,7 @@ class PassLicense extends Wiki {
 			     $flickr_api_key=null,
 			     $ipernity_api_key=null){
 
-		Wiki::__construct($url); // Pass main parameter to parent Class' __construct() 
+		Wiki::__construct($url); // Pass main parameter to parent Class' __construct()
 		$this->flickr_licenses_blacklist = $flickr_licenses_blacklist;
 		$this->ipernity_licenses_blacklist = $ipernity_licenses_blacklist;
 		$this->picasa_licenses_blacklist = $picasa_licenses_blacklist;
@@ -625,7 +625,7 @@ class PassLicense extends Wiki {
 		$this->site_url = parse_url($this->url);
 		$this->site_url = $this->site_url['scheme'].'://'.$this->site_url['host'].'/wiki/';
 	}
-	
+
 	/**
 	 * MediaWiki
 	 **/
@@ -637,16 +637,16 @@ class PassLicense extends Wiki {
 	 * @return array The contents as array
 	**/
 	function getPageContents($page,$props=null){
-	
+
 		if(is_array($props)) $props = implode('|',$props);
-	
+
 		if(!empty($_SESSION['wiki_page_contents'][$page][$props])) $contents = $_SESSION['wiki_page_contents'][$page][$props];
 		else{
 			$contents = $this->query("?action=parse&format=php&prop=$props&disabletoc=&mobileformat=&noimages=&page=".urlencode($page));
 			$contents['parse']['text']['*'] = str_replace('<a','<a target="'.urlencode($page).'"',$contents['parse']['text']['*']);
 			$contents['parse']['text']['*'] = str_replace('href="/wiki/','href="'.$this->site_url,$contents['parse']['text']['*']);
 			$_SESSION['wiki_page_contents'][$page][$props] = $contents;
-		}		
+		}
 		return $contents;
 	}
 
@@ -660,7 +660,7 @@ class PassLicense extends Wiki {
 	function getThumbURL($page,$width=null,$height=null){
 		if(!is_numeric($width)) $width = '2000';
 		if(!is_numeric($height)) $height = '2000';
-		
+
 		$page = urlencode($page);
 
 		if(!empty($_SESSION['thumburl'][$page][$width.'_'.$height])) $thumburl = $_SESSION['thumburl'][$page][$width.'_'.$height];
@@ -673,7 +673,7 @@ class PassLicense extends Wiki {
 
 			$_SESSION['thumburl'][$page][$width.'_'.$height] = $thumburl;
 		}
-		
+
 		return $thumburl;
 	}
 
@@ -694,7 +694,7 @@ class PassLicense extends Wiki {
 		$templates = $templates[0];
 		return $templates;
 	}
-	
+
 	/**
 	 * Get information about external sources from an URL. URL is parsed using regex,
 	 * the relevant components are extracted from the first valid URL, and then the
@@ -710,7 +710,7 @@ class PassLicense extends Wiki {
 	 * * If no valid URL found, return false.
 	**/
 	function getExternalInfo($url_g){
-	
+
 		if(is_array($url_g)){
 			foreach($url_g as $url){
 
@@ -775,7 +775,7 @@ class PassLicense extends Wiki {
 				break;
 			}
 		}
-		
+
 		if(empty($url)) return false;
 
 		switch($service){
@@ -796,9 +796,9 @@ class PassLicense extends Wiki {
 				}
 
 				$photo_info = $this->getFlickrInfo($photo_id);
-				
-				if($photo_info['stat'] == 'ok'){					
-					
+
+				if($photo_info['stat'] == 'ok'){
+
 					$photo_date_uploaded = strftime("%F %T",$photo_info['photo']['dates']['posted']);
 					$photo_date_taken = $photo_info['photo']['dates']['taken'];
 
@@ -815,7 +815,7 @@ class PassLicense extends Wiki {
 				break;
 
 			case 'ipernity':
-			
+
 				if(empty($this->ipernity_api_key)) return false;
 
 				$photo_id = $this->getPhotoID($url,3);
@@ -823,13 +823,13 @@ class PassLicense extends Wiki {
 
 				if($photo_info['api']['status'] == 'ok'){
 					$photo_license = $photo_info['doc']['license'];
-					
+
 					if(in_array($photo_license,$this->ipernity_licenses_blacklist)) $allowed = false;
-					$license = $this->getIpernityLicense($photo_license);				
+					$license = $this->getIpernityLicense($photo_license);
 
 					$thumburl = $this->getIpernityThumbURL($photo_info['doc']['thumbs']['thumb'],200);
 					$photourl = $photo_info['doc']['link'];
-					
+
 					$photo_date_taken = $photo_info['doc']['dates']['created'];
 					$photo_date_uploaded = strftime("%F %T",substr($photo_info['doc']['dates']['posted_at'],0,10));				
 
@@ -839,36 +839,36 @@ class PassLicense extends Wiki {
 				break;
 
 			case 'picasa_url':
-			
+
 				$url_r = str_replace('#','/',$url);
 				$user = $this->getPhotoID($url_r,1);
 				$album = $this->getPhotoID($url_r,2);
 				$photo_id = $this->getPhotoID($url_r,3);
 				$photo_info = $this->getPicasaInformation($user,$album,$photo_id);
-				
+
 				if($result !== false){
 					$license = $photo_info['gphoto$license']['name'];
 					if(in_array($photo_info['gphoto$license']['id'],$this->picasa_licenses_blacklist)) $allowed = false;
 
 					$thumburl = $this->getPicasaThumbURL($photo_info['icon']['$t']);
 					$photourl = $url;
-					
+
 					if(is_numeric($photo_info['exif$tags']['exif$time']['$t'])) $photo_date_taken = strftime("%F %T",substr($photo_info['exif$tags']['exif$time']['$t'],0,10));
 					else $photo_date_taken = $photo_info['exif$tags']['exif$time']['$t'];
-					
+
 					if(is_numeric($photo_info['gphoto$timestamp']['$t'])) $photo_date_uploaded = strftime("%F %T",substr($photo_info['gphoto$timestamp']['$t'],0,10));
 					else $photo_date_uploaded = $photo_info['gphoto$timestamp']['$t'];
 
 					$service = 'Picasa';
 
 				}else $service = false;
-				break;			
+				break;
 			// Add more services here
 			default:
 				$service = false;
 				break;
 		}
-		
+
 		if($service == false) return false;
 		else return array('service'=>$service,
 			     'license'=>$license,
@@ -898,7 +898,7 @@ class PassLicense extends Wiki {
 			}
 		return $closest;
 	}
-	
+
 	/**
 	 * Extract the desired parameter from an URL (mainly for the Photo ID).
 	 * URL components are extracted using parse_url() with either
@@ -937,7 +937,7 @@ class PassLicense extends Wiki {
 
 		return $color;
 	}
-	
+
 	/**
 	 * Decode a base58 encoded Flickr shorten URL
 	 * @param $num The sorten ID
@@ -968,7 +968,7 @@ class PassLicense extends Wiki {
 	**/
 	function getFlickrInfo($id){
 		if(!is_numeric($id)) return false;
-	
+
 		if(!empty($_SESSION['flickr_info'][$id])) $result = $_SESSION['flickr_info'][$id];
 		else{
 			$url = "https://api.flickr.com/services/rest/";
@@ -988,7 +988,7 @@ class PassLicense extends Wiki {
 	**/
 	function getFlickrLicense($id){
 		if(!is_numeric($id)) return false;
-	
+
 		if(!empty($_SESSION['flickr_licenses'])) $result = $_SESSION['flickr_licenses'];
 		else{
 			$url    = "https://api.flickr.com/services/rest/";
@@ -996,7 +996,7 @@ class PassLicense extends Wiki {
 			$result = $this->query($query,null,null,$url);
 			$_SESSION['flickr_licenses'] = $result;
 		}
-	
+
 		if($result['stat'] == 'ok'){
 			$licenses = $result['licenses']['license'];
 
@@ -1008,7 +1008,7 @@ class PassLicense extends Wiki {
 			}
 			if(!empty($name)) return $name;
 			else return false;
-		
+
 		}else return false;
 	}
 
@@ -1017,7 +1017,7 @@ class PassLicense extends Wiki {
 	 * @param $id The Flickr file ID
 	 * @param $max_height = The maximum desired height
 	 * @return string The numeric ID
-	**/   
+	**/
 	function getFlickrThumbURL($id,$max_height=200){
 		if(!empty($_SESSION['flickr_thumburl'][$id])) $result = $_SESSION['flickr_thumburl'][$id];
 		else{
@@ -1026,18 +1026,18 @@ class PassLicense extends Wiki {
 			$result = $this->query($query,null,null,$url);
 			$_SESSION['flickr_thumburl'][$id] = $result;
 		}
-	
+
 		if($result['stat'] == 'ok'){
 			$get_sizes = $result['sizes']['size'];
-		
+
 			foreach($get_sizes as $size){
 				$sizes[] = $size['height'];
 			}
-		
+
 			$best_fit = $this->bestFit($max_height,$sizes,true);
-	
+
 			return $get_sizes[$best_fit]['source'];
-		}else return false;	
+		}else return false;
 	}
 
 	/**
@@ -1054,7 +1054,7 @@ class PassLicense extends Wiki {
 		else{
 			$url    = "https://www.ipernity.com/api/doc.get/php/e";
 			$query  = "?doc_id=$id&api_key=$this->ipernity_api_key";
-				
+
 			$result = $this->query($query,null,null,$url);
 			$_SESSION['ipernity_info'][$id] = $result;
 		}
@@ -1088,7 +1088,7 @@ class PassLicense extends Wiki {
 			}
 		}
 		if(empty($license)) $license = false;
-		return $license;	
+		return $license;
 	}
 
 	/**
@@ -1099,7 +1099,7 @@ class PassLicense extends Wiki {
 	 * @return string The desired URL of the thumbnail
 	**/
 	function getIpernityThumbURL($thumbs,$max=null){
-	
+
 		foreach($thumbs as $key=>$thumb){
 			$h[$key] = $thumb['h'];
 		}
@@ -1112,7 +1112,7 @@ class PassLicense extends Wiki {
 
 		return $thumbs[$best_fit]['url'];
 	}
-	
+
 	/**
 	 * Picasa
 	 **/
@@ -1123,7 +1123,7 @@ class PassLicense extends Wiki {
 	 * @param $album The Album (either numeric or string)
 	 * @param $photoid The photo ID (as numeric)
 	 * @return array The desired information
-	**/	
+	**/
 	function getPicasaInformation($user,$album,$photoid){
 		if(!is_numeric($photoid)) return false;
 
@@ -1137,7 +1137,7 @@ class PassLicense extends Wiki {
 			// Only public feeds will be reterived. Otherwise, am HTTP 404 will be got
 			// Private feeds could be obtained with authentication using OAuth 2.0, but
 			// that feature is in researching and developement
-			$headers = get_headers($url.$query);			
+			$headers = get_headers($url.$query);
 			if($headers[0] == 'HTTP/1.0 200 OK'){
 				// Using file_get_contents() due cURL does not work with this result (tested)
 				$result = file_get_contents($url);
@@ -1156,7 +1156,7 @@ class PassLicense extends Wiki {
 	 * @param $url The URL to be parsed
 	 * @param $bestfit The (maximum) desired height
 	 * @return string The URL with the desired height established
-	**/	
+	**/
 	function getPicasaThumbURL($url,$bestfit=200){
 		$url_a = parse_url($url);
 		$url_p = explode('/',$url_a['path']);
