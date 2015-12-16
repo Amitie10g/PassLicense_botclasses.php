@@ -5,6 +5,8 @@ Contains code from the Chris G's Bot classes library. It uses the MediaWiki and 
 
 Warning: This tool is intended to be used only locally, and lacks of any authentication method by itself. For security reasons, DON'T expose it to Internet! or protect it with any authentication method supported by your Web server.
 
+Online demo and documentation is available at https://tools.wmflabs.org/davod/passlicense
+
 #Features:
 
 * Listing File: members from a arbitary category, with a selection of categories for review
