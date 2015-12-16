@@ -227,7 +227,8 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 <div style="clear:both;font-size:0">&nbsp;</div>
 </div>
 <?php $num++; } } } if(!empty($non_empty)){ ?>
-<p><input type="hidden" name="category" value="<?= $_GET['category'] ?>">
+<p><?php isset($_GET['show_blacklisted']) { ?><input type="hidden" name="blacklisted" value="1"><?php } ?>
+<input type="hidden" name="category" value="<?= $_GET['category'] ?>">
 <input type="submit" value="Pass files &#8811;"></p>
 <?php }else{ ?><i>No files in this category</i><?php } } ?>
 </form>

@@ -50,6 +50,15 @@
 /**
  * This class is designed to provide a simplified interface to cURL which maintains cookies.
  * @author Cobi
+ * @property $ch The cURL class reference
+ * @property $uid The cURL UID object
+ * @property $cookie_jar The cURL cookie_jar object 
+ * @property $postfollowredirs
+ * @property $getfollowredirs
+ * @property $quiet
+ * @property $userAgent The default User agent
+ * @property $httpHeader
+ * @property $defaultHttpHeader
  **/
 class http {
 	private $ch;
@@ -59,23 +68,38 @@ class http {
 	public $getfollowredirs;
 	public $quiet=false;
 	public $userAgent = 'php wikibot classes';
-	public $httpHeader = array( 'Expect:' );
-	public $defaultHttpHeader = array( 'Expect:' );
+	public $httpHeader = array('Expect:');
+	public $defaultHttpHeader = array('Expect:');
 
+	/**
+	  * Get the HTTP code from cURL.
+	  * @return array
+	 **/
 	public function http_code(){
 		return curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
 	}
 
-	function data_encode ($data,$keyprefix = "",$keypostfix = ""){
+	/**
+	  * Encode the HTTP data.
+	  * @param $data
+	  * @param $keyprefix
+	  * @param $keypost
+	  * @return array
+	 **/
+	function data_encode($data,$keyprefix = "",$keypostfix = ""){
 		assert(is_array($data));
 		$vars=null;
-		foreach($data as $key=>$value) {
+		foreach($data as $key=>$value){
 			if(is_array($value)) $vars .= $this->data_encode($value, $keyprefix.$key.$keypostfix.urlencode("["), urlencode("]"));
 			else $vars .= $keyprefix.$key.$keypostfix."=".urlencode($value)."&";
 		}
 		return $vars;
 	}
 
+	/**
+	  * This is the Construct.
+	  * @return void
+	 **/
 	function __construct(){
 		$this->ch = curl_init();
 		$this->uid = dechex(rand(0,99999999));
@@ -87,12 +111,18 @@ class http {
 		$this->cookie_jar = array();
 	}
 
+	/**
+	  * Send data through HTTP POST.
+	  * @param $url The target URL.
+	  * @param $data The POST data.
+	  * @return mixed The response from Server.
+	 **/
 	function post($url,$data){
 		$time = microtime(1);
 		curl_setopt($this->ch,CURLOPT_URL,$url);
 		curl_setopt($this->ch,CURLOPT_USERAGENT,$this->userAgent);
 		/* Crappy hack to add extra cookies, should be cleaned up */
-		foreach ($this->cookie_jar as $name => $value) {
+		foreach ($this->cookie_jar as $name => $value){
 			if (empty($cookies)) $cookies = "$name=$value";
 			else $cookies .= "; $name=$value";
 		}
@@ -110,13 +140,18 @@ class http {
 		return $data;
 	}
 
+	/**
+	  * Send data through HTTP GET.
+	  * @param $url The target URL.
+	  * @return mixed The response from Server.
+	 **/
 	function get($url){
 		$time = microtime(1);
 		curl_setopt($this->ch,CURLOPT_URL,$url);
 		curl_setopt($this->ch,CURLOPT_USERAGENT,$this->userAgent);
 		/* Crappy hack to add extra cookies, should be cleaned up */
 		$cookies = null;
-		foreach ($this->cookie_jar as $name => $value) {
+		foreach ($this->cookie_jar as $name => $value){
 			if (empty($cookies)) $cookies = "$name=$value";
 			else $cookies .= "; $name=$value";
 		}
@@ -134,21 +169,31 @@ class http {
 		return $data;
 	}
 
-	function setHTTPcreds($uname,$pwd) {
+	/**
+	  * Set the HTTP credentials.
+	  * @param $uname
+	  * @param $pwd
+	  * @return void
+	 **/
+	function setHTTPcreds($uname,$pwd){
 		curl_setopt($this->ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 		curl_setopt($this->ch, CURLOPT_USERPWD, $uname.":".$pwd);
 	}
 
-	function __destruct () {
+	/**
+	  * This is the destruct.
+	  * @return void
+	 **/
+	function __destruct (){
 		curl_close($this->ch);
 		@unlink('/tmp/cluewikibot.cookies.'.$this->uid.'.dat');
 	}
 }
 
 /**
- * This class is interacts with wikipedia using api.php
- * @author Chris G and Cobi
- * @property string $url The Project URL (API path)
+ * This class is interacts with the Wiki using api.php.
+ * @author Chris G and Cobi.
+ * @property string $url The Project URL (API path).
  **/
 class Wiki {
 	private $http;
@@ -158,10 +203,13 @@ class Wiki {
 	public $echoRet = false; // For debugging unserialize errors
 
 	/**
-	  * This is our constructor.
+	  * This is the constructor.
+	  * @param $url The project and API URL
+	  * @param $hu
+	  * @param $hp 
 	  * @return void
 	 **/
-	function __construct ($url='https://commons.wikimedia.org/w/api.php',$hu=null,$hp=null) {
+	function __construct ($url='https://commons.wikimedia.org/w/api.php',$hu=null,$hp=null){
 		$this->http = new http;
 		$this->token = null;
 		$this->url = $url;
@@ -169,8 +217,14 @@ class Wiki {
 		if ($hu!==null) $this->http->setHTTPcreds($hu,$hp);
 	}
 
-	function __set($var,$val) {
-		switch($var) {
+	/**
+	  * The set.
+	  * @param $var
+	  * @param $val
+	  * @return void
+	 **/
+	function __set($var,$val){
+		switch($var){
   		case 'quiet':
 			$this->http->quiet=$val;
 	 		break;
@@ -180,7 +234,7 @@ class Wiki {
 	}
 
 	/**
-	 * Changes the user agent.
+	 * Set/change the user agent.
 	 * @param $userAgent The user agent string.
 	**/
 	function setUserAgent($userAgent){
@@ -188,28 +242,28 @@ class Wiki {
 	}
 	
 	/**
-	  * Changes the http header.
+	  * Set/change the http header.
 	  * @param $httpHeader The http header.
 	 **/
-	function setHttpHeader ( $httpHeader ) {
+	function setHttpHeader ( $httpHeader ){
 		$this->http->httpHeader = $httpHeader;
 	}
 
 	/**
-	  * Changes the http header.
+	  * Set/change the http headers.
 	  * @param $httpHeader The http header.
 	 **/
-	function useDefaultHttpHeader () {
+	function useDefaultHttpHeader (){
 		$this->http->httpHeader = $this->http->defaultHttpHeader;
 	}
 
 	/**
-	 * Sends a query to the api.
+	 * Sends a query to the API.
 	 * @param $query The query string.
 	 * @param $post POST data if its a post request (optional).
-	 * @param $repeat How many times the request will be repeated
-	 * @param $url The URL where we want to work (for external services API)
-	 * @return array The api result.
+	 * @param $repeat How many times the request will be repeated.
+	 * @param $url The URL where we want to work (for external services API).
+	 * @return mixed The response from server (API result).
 	 **/
 	function query($query,$post=null,$repeat=null,$url=null){
 
@@ -221,8 +275,8 @@ class Wiki {
 			if($repeat < 10) return $this->query($query,$post,++$repeat);
 		else throw new Exception("HTTP Error " . $this->http->http_code() . " - $url$query"  );
 		}
-		if($this->echoRet) {
-			if( @unserialize( $ret ) === false ) {
+		if($this->echoRet){
+			if( @unserialize( $ret ) === false ){
 				return array( 'errors' => array("The API query result can't be unserialized. Raw text is as follows: $ret\n" ) );
 			}
 		}
@@ -231,17 +285,19 @@ class Wiki {
 	
 	/**
 	 * Gets the content of a page. Returns false on error.
+	 * Use getPageContents() as alternative to get the page in multiple formats
 	 * @param $page The wikipedia page to fetch.
-	 * @param $revid The revision id to fetch (optional)
-	 * @return string The wikitext for the page.
+	 * @param $revid The revision id to fetch (optional).
+	 * @param $$detectEditConflict
+	 * @return string The wikitext for the given page.
 	 **/
-	function getpage ($page,$revid=null,$detectEditConflict=false) {
+	function getpage($page,$revid=null,$detectEditConflict=false){
 		$append = '';
 		if ($revid!=null)
 		$append = '&rvstartid='.$revid;
 		$x = $this->query('?action=query&format=php&prop=revisions&titles='.urlencode($page).'&rvlimit=1&rvprop=content|timestamp'.$append);
-		foreach ($x['query']['pages'] as $ret) {
-			if (isset($ret['revisions'][0]['*'])) {
+		foreach ($x['query']['pages'] as $ret){
+			if (isset($ret['revisions'][0]['*'])){
 				if ($detectEditConflict)
 				$this->ecTimestamp = $ret['revisions'][0]['timestamp'];
 				return $ret['revisions'][0]['*'];
@@ -250,13 +306,13 @@ class Wiki {
 	}
 
 	/**
-	  * Gets the page id for a page.
+	  * Gets the ID for a page.
 	  * @param $page The wikipedia page to get the id for.
-	  * @return string The page id of the page.
+	  * @return string The page ID.
 	 **/
-	function getpageid ($page) {
+	function getpageid($page){
 		$x = $this->query('?action=query&format=php&prop=revisions&titles='.urlencode($page).'&rvlimit=1&rvprop=content');
-		foreach ($x['query']['pages'] as $ret) {
+		foreach ($x['query']['pages'] as $ret){
 			return $ret['pageid'];
 		}
 	}
@@ -264,16 +320,19 @@ class Wiki {
 	/**
 	 * Returns an array with all the members of $category
 	 * @param $category The category to use.
+	 * @param $limit The maximum members returned (10 by default)
+	 * @param $continue The parameters to continue previous query
+	 * @param $subcat If returning subcategories
 	 * @param $subcat (bool) Go into sub categories?
-	 * @return array The category ID
+	 * @return array The category ID.
 	**/
-	function categorymembers ($category,$limit=10,$continue=null,$subcat=false) {
+	function categorymembers($category,$limit=10,$continue=null,$subcat=false){
 	
 		$res = $this->query('?action=query&list=categorymembers&cmtype=file&cmsort=timestamp&cmdir=newer&format=php&cmtitle='.urlencode($category).'&cmlimit='.$limit.$continue);
 			
 		if (isset($res['error'])) return false;
 	
-		foreach($res['query']['categorymembers'] as $page) {
+		foreach($res['query']['categorymembers'] as $page){
 			$title = str_replace(' ','_',$page['title']);
 			// For a strange reason, "&cmtype=file&cmsort=timestamp" does not return File:-only reults
 			if(preg_match('/^(File:){1}[\p{L}\p{N}\p{P}\p{S}_ ]+$/',$title) >= 1) $pages[] = $title;
@@ -285,14 +344,14 @@ class Wiki {
 	}
 
 	/**
-	 * Returns an array with all the subpages of $page
+	 * Returns an array with all the subpages of $page.
 	 * @param $page
-	 * @return array The subpages list
+	 * @return array The subpages list.
 	 **/
-	function subpages ($page) {
+	function subpages($page){
 		/* Calculate all the namespace codes */
 		$ret = $this->query('?action=query&meta=siteinfo&siprop=namespaces&format=php');
-		foreach ($ret['query']['namespaces'] as $x) {
+		foreach ($ret['query']['namespaces'] as $x){
 			$namespaces[$x['*']] = $x['id'];
 		}
 		$temp = explode(':',$page,2);
@@ -300,15 +359,15 @@ class Wiki {
 		$title = $temp[1];
 		$continue = '';
 		$subpages = array();
-		while (true) {
+		while (true){
 			$res = $this->query('?action=query&format=php&list=allpages&apprefix='.urlencode($title).'&aplimit=500&apnamespace='.$namespace.$continue);
-			if (isset($x['error'])) {
+			if (isset($x['error'])){
 				return false;
 			}
-			foreach ($res['query']['allpages'] as $p) {
+			foreach ($res['query']['allpages'] as $p){
 				$subpages[] = $p['title'];
 			}
-			if (empty($res['query-continue']['allpages']['apfrom'])) {
+			if (empty($res['query-continue']['allpages']['apfrom'])){
 				return $subpages;
 			} else {
 				$continue = '&apfrom='.urlencode($res['query-continue']['allpages']['apfrom']);
@@ -317,20 +376,20 @@ class Wiki {
 	}
 
 	/**
-	 * This function takes a username and password and logs you into wikipedia.
+	 * This function takes a username and password and logs you into Wiki.
 	 * @param $user Username to login as.
 	 * @param $pass Password that corrisponds to the username.
 	 * @return array The API result
 	 **/
-	function login ($user,$pass) {
+	function login($user,$pass){
 		$post = array('lgname' => $user, 'lgpassword' => $pass);
 		$ret = $this->query('?action=login&format=php',$post);
-		/* This is now required - see https://bugzilla.wikimedia.org/show_bug.cgi?id=23076 */
-		if ($ret['login']['result'] == 'NeedToken') {
+		/* This is now required - see https://phabricator.wikimedia.org/T25076 */
+		if ($ret['login']['result'] == 'NeedToken'){
 			$post['lgtoken'] = $ret['login']['token'];
 			$ret = $this->query( '?action=login&format=php', $post );
 		}
-		if ($ret['login']['result'] != 'Success') {
+		if ($ret['login']['result'] != 'Success'){
 			echo "Login error: \n";
 			print_r($ret);
 			die();
@@ -339,8 +398,12 @@ class Wiki {
 		}
 	}
 
-	/* crappy hack to allow users to use cookies from old sessions */
-	function setLogin($data) {
+	/**
+	 * crappy hack to allow users to use cookies from old sessions.
+	 * @param $data The data to be parsed.
+	 * @return void
+	 **/ 
+	function setLogin($data){
 		$this->http->cookie_jar = array(
 		$data['cookieprefix'].'UserName' => $data['lgusername'],
 		$data['cookieprefix'].'UserID' => $data['lguserid'],
@@ -355,18 +418,19 @@ class Wiki {
 	 * for more info.
 	 * @param $page The page we want to edit.
 	 * @param $user The bot's username.
+	 * @param $text
 	 * @return bool
 	 **/
-	function nobots ($page,$user=null,$text=null) {
-		if ($text == null) {
+	function nobots($page,$user=null,$text=null){
+		if ($text == null){
 			$text = $this->getpage($page);
 		}
-		if ($user != null) {
-			if (preg_match('/\{\{(nobots|bots\|allow=none|bots\|deny=all|bots\|optout=all|bots\|deny=.*?'.preg_quote($user,'/').'.*?)\}\}/iS',$text)) {
+		if ($user != null){
+			if (preg_match('/\{\{(nobots|bots\|allow=none|bots\|deny=all|bots\|optout=all|bots\|deny=.*?'.preg_quote($user,'/').'.*?)\}\}/iS',$text)){
 				return false;
 			}
 		} else {
-			if (preg_match('/\{\{(nobots|bots\|allow=none|bots\|deny=all|bots\|optout=all)\}\}/iS',$text)) {
+			if (preg_match('/\{\{(nobots|bots\|allow=none|bots\|deny=all|bots\|optout=all)\}\}/iS',$text)){
 				return false;
 			}
 		}
@@ -377,9 +441,9 @@ class Wiki {
 	 * This function returns the edit token for the current user.
 	 * @return string The edit token.
 	 **/
-	function getedittoken () {
+	function getedittoken(){
 		$x = $this->query('?action=query&prop=info&intoken=edit&titles=Main%20Page&format=php');
-		foreach ($x['query']['pages'] as $ret) {
+		foreach ($x['query']['pages'] as $ret){
 			return $ret['edittoken'];
 		}
 	}
@@ -388,12 +452,14 @@ class Wiki {
 	 * @param $page Page name to edit.
 	 * @param $data Data to post to page.
 	 * @param $summary Edit summary to use.
-	 * @param $minor Whether or not to mark edit as minor.  (Default false)
-	 * @param $bot Whether or not to mark edit as a bot edit.  (Default true)
+	 * @param $minor Whether or not to mark edit as minor. (Default false)
+	 * @param $bot Whether or not to mark edit as a bot edit. (Default true)
+	 * @param $detectEC
+	 * @param $maxlag
 	 * @return array The API result
 	 **/
-	function edit($page,$data,$summary = '',$minor = false,$bot = true,$section = null,$detectEC=false,$maxlag='') {
-		if ($this->token==null) {
+	function edit($page,$data,$summary = '',$minor = false,$bot = true,$section = null,$detectEC=false,$maxlag=''){
+		if ($this->token==null){
 			$this->token = $this->getedittoken();
 		}
 		$params = array(
@@ -406,14 +472,14 @@ class Wiki {
 			($minor?'minor':'notminor') => '1',
 			($bot?'bot':'notbot') => '1'
 		);
-		if ($section != null) {
+		if ($section != null){
 			$params['section'] = $section;
 		}
-		if ($this->ecTimestamp != null && $detectEC == true) {
+		if ($this->ecTimestamp != null && $detectEC == true){
 			$params['basetimestamp'] = $this->ecTimestamp;
 			$this->ecTimestamp = null;
 		}
-		if ($maxlag!='') {
+		if ($maxlag!=''){
 			$maxlag='&maxlag='.$maxlag;
 		}
 		return $this->query('?action=edit&format=php'.$maxlag,$params);
@@ -424,10 +490,10 @@ class Wiki {
 	 * @param $page The "File:" page on the wiki which the URL of is desired.
 	 * @return string The URL pointing directly to the media file (Eg http://upload.mediawiki.org/wikipedia/en/1/1/Example.jpg)
 	 **/
-	function getfilelocation ($page) {
+	function getfilelocation($page){
 		$x = $this->query('?action=query&format=php&prop=imageinfo&titles='.urlencode($page).'&iilimit=1&iiprop=url');
-		foreach ($x['query']['pages'] as $ret ) {
-			if (isset($ret['imageinfo'][0]['url'])) {
+		foreach ($x['query']['pages'] as $ret ){
+			if (isset($ret['imageinfo'][0]['url'])){
 				return $ret['imageinfo'][0]['url'];
 			} else
 				return false;
@@ -439,10 +505,10 @@ class Wiki {
 	 * @param $page The "File:" page
 	 * @return string The user who uploaded the topmost version of the file.
 	 **/
-	function getfileuploader ($page) {
+	function getfileuploader ($page){
 		$x = $this->query('?action=query&format=php&prop=imageinfo&titles='.urlencode($page).'&iilimit=1&iiprop=user');
-		foreach ($x['query']['pages'] as $ret ) {
-			if (isset($ret['imageinfo'][0]['user'])) {
+		foreach ($x['query']['pages'] as $ret ){
+			if (isset($ret['imageinfo'][0]['user'])){
 				return $ret['imageinfo'][0]['user'];
 			} else
 				return false;
@@ -514,8 +580,7 @@ class Wiki {
 }
 
 /**
- * This class is intended to do the license check/pass. External services API keys
- * should be declared in __construct()
+ * This class is intended to do the license check/pass.
  * @author Davod
  * @property string $url The Project URL (API path)
  * @property string $site_url The project URL (main page)
@@ -534,6 +599,16 @@ class PassLicense extends Wiki {
 	private $ipernity_licenses_blacklist;
 	private $picasa_licenses_blacklist;
 
+	/**
+	  * This is the constructor
+	  * @param $url The Project URL (forwarded to the parent class)
+	  * @param $flickr_licenses_blacklist The list of Flickr licenses ID not allowed at Wiki
+	  * @param $ipernity_licenses_blacklist The list of Ipernity licenses ID not allowed at Wiki
+	  * @param $picasa_licenses_blacklist The list of Picasa licenses ID not allowed at Wiki
+	  * @param $flickr_api_key The Flckr API key
+	  * @param $ipernity_api_key The Ipernity API key
+	  * @return void
+	 **/
 	function __construct($url,
 			     $flickr_licenses_blacklist,
 			     $ipernity_licenses_blacklist,
@@ -624,7 +699,7 @@ class PassLicense extends Wiki {
 	 * Get information about external sources from an URL. URL is parsed using regex,
 	 * the relevant components are extracted from the first valid URL, and then the
 	 * information is obtained using the external services API.
-	 * @params $url_g The URL to be parsed, either string or array
+	 * @param $url_g The URL to be parsed, either string or array
 	 * @return array An array with the following elements:
 	 * * 'service'  The external service found
 	 * * 'license'  The license text (eg. Creative Commons Attribution)
@@ -813,10 +888,10 @@ class PassLicense extends Wiki {
 	 * @param $use_key To return the array key instead of its value
 	 * @return string The closest (and not greater) value or its key
 	**/
-	function bestFit($haystack,$needle,$use_key=false) {
+	function bestFit($haystack,$needle,$use_key=false){
 		$closest = null;
-			foreach ($needle as $key=>$item) {
-				if ($closest === null || (abs($haystack - $closest) > abs($item - $haystack) && $item <= $haystack)) {
+			foreach ($needle as $key=>$item){
+				if ($closest === null || (abs($haystack - $closest) > abs($item - $haystack) && $item <= $haystack)){
 					if($use_key === true) $closest = $key;
 					else $closest = $item;
 				}
@@ -869,10 +944,10 @@ class PassLicense extends Wiki {
 	 * @param $alphabet The alphabet where find
 	 * @return string The ID as base10
 	**/
-	function flickrBase58Decode($num,$alphabet) {
+	function flickrBase58Decode($num,$alphabet){
 		$decoded = 0;
 		$multi = 1;
-		while (strlen($num) > 0) {
+		while (strlen($num) > 0){
 			$digit = $num[strlen($num)-1];
 			$decoded += $multi * strpos($alphabet, $digit);
 			$multi = $multi * strlen($alphabet);
