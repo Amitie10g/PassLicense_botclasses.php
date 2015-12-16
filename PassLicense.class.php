@@ -78,7 +78,7 @@ class http {
 	public function http_code(){
 		return curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
 	}
-
+ 
 	/**
 	  * Encode the HTTP data.
 	  * @param $data
