@@ -58,6 +58,14 @@
 		background:#fff url("img_bg.png") repeat;
 	}
 	
+	a.button {
+		-webkit-appearance: button;
+		-moz-appearance: button;
+		appearance: button;
+		text-decoration: none;
+		color: initial;
+		padding:5px;
+	}
     </style>
     
     <script src="./PassLicense (botclasses.php) by Davod_files/jquery.min.js"></script>
@@ -65,11 +73,9 @@
 </head>
 <body>
   <h1>PassLicense (botclasses.php)</h1>
-  <p>This is just a static demo with files actually found in a query. See the <a href="doc">Documentation</a> for more information.<br>
+  <p>This is just a static demo with files actually found in a query. See the <a href="doc" target="_blank">Documentation</a> for more information.<br>
   Source code is available at <a href="https://github.com/Amitie10g/PassLicense_botclasses.php">GitHub</a>.</p>
 <div>
-
-
 
 <form method="get" action="?select">
 <b>Enter a category:</b> <input style="width:300px" type="text" name="category" value="Flickr_images_needing_human_review" list="categories" onchange="this.orm.submit();">
@@ -91,7 +97,6 @@
 	</option><option value="Unreviewed_files_from_Bollywood_Hungama"></option>
 </datalist>
 <input type="submit" value="≫">&nbsp;<a href="?show_blacklisted">Show blacklisted</a>&nbsp;|&nbsp;<a href="?clear_cache">Clear cache</a></form>
-<form method="post" action="passed.html">
 <div style="background:#06f;margin:auto">
 <input style="float:left !important;margin:9px" type="checkbox" name="pagename[]" value="File%3ACostume_Pageant-_Luminara_Unduli_cropped.jpg">
 <label style="float:left;font-weight:bold;width:97%;height:20px;margin:5px auto" class="collapse" for="File%3ACostume_Pageant-_Luminara_Unduli_cropped.jpg_details">File:Costume_Pageant-_Luminara_Unduli_cropped.jpg</label>
@@ -854,12 +859,11 @@ To discuss it, please visit <span style="font-size: larger;"><b><a target="File%
 </dl><p><span class="licensetpl_link" style="display:none;">http://creativecommons.org/licenses/by/2.0</span> <span class="licensetpl_short" style="display:none;">CC BY 2.0</span> <span class="licensetpl_long" style="display:none;">Creative Commons Attribution 2.0</span> <span class="licensetpl_link_req" style="display:none;">true</span><span class="licensetpl_attr_req" style="display:none;">true</span></p>
 </td>
 </tr></tbody></table></div>	</div>
-	<iframe name="File%3AFallout4MisterHandy2.jpg" style="display:inline-table;border:2px #000 dotted;width:49%;height:450px;float:right"></iframe>
+<iframe name="File%3AFallout4MisterHandy2.jpg" style="display:inline-table;border:2px #000 dotted;width:49%;height:450px;float:right"></iframe>
 </div>
 <div style="clear:both;font-size:0">&nbsp;</div>
 </div>
 <p><input type="hidden" name="category" value="Flickr_images_needing_human_review">
-<input type="submit" value="Pass files ≫"></p>
-</form>
+<a href="passed.html" class="button">Pass files ≫</a></p>
 </div>
 </body></html>
