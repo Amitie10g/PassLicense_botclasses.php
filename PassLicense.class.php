@@ -46,7 +46,7 @@
  *    Fixed the cURL issues with PHP5+
  *    Added several functions to interact with external services like Flickr
  **/
-
+ 
 /**
  * This class is designed to provide a simplified interface to cURL which maintains cookies.
  * @author Cobi

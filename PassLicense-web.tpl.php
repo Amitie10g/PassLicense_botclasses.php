@@ -218,7 +218,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			</div>
 		</div>
 	</div>
-
+ 
 	<div style="border:2px #000 dotted;width:49%;height:450px;float:left;overflow:auto">
 	<?= $text ?>
 	</div>
