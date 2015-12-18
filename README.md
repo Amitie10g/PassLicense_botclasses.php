@@ -32,7 +32,7 @@ not totally accurate and does not show the actual license at the source, based o
 
 #To do:
 
-* Add support for more services (Panoramio as priority)
+* Add support for more services (Panoramio and Mushroom Observer)
 * Add support for pages in large categories (the MediaWiki API make this very hard)
 
 I can do this job alone, but any help is welcome.
