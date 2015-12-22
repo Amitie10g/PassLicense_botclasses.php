@@ -584,17 +584,18 @@ class Wiki {
  * @author Davod
  * @property string $url The Project URL (API path)
  * @property string $site_url The project URL (main page)
- * @property string $flickr_licenses_blacklist The Flickr Licenses blacklist array
- * @property string $ipernity_licenses_blacklist The Ipernity Licenses blacklist array
  * @property string $picasa_licenses_blacklist The Picasa Licenses blacklist array
  * @property string $flickr_api_key The Flickr API key (optional)
  * @property string $ipernity_api_key The Ipernity API key (optional)
+ * @property string $flickr_licenses_blacklist The Flickr Licenses blacklist array
+ * @property string $ipernity_licenses_blacklist The Ipernity Licenses blacklist array
  **/
 class PassLicense extends Wiki {
 	public $url;
 	public $site_url;
 	private $flickr_api_key;
 	private $ipernity_api_key;
+	private $youtube_api_key;
 	private $flickr_licenses_blacklist;
 	private $ipernity_licenses_blacklist;
 	private $picasa_licenses_blacklist;
@@ -607,6 +608,7 @@ class PassLicense extends Wiki {
 	  * @param $picasa_licenses_blacklist The list of Picasa licenses ID not allowed at Wiki
 	  * @param $flickr_api_key The Flckr API key
 	  * @param $ipernity_api_key The Ipernity API key
+	  * @param $youtube_api_key The Youtube API key
 	  * @return void
 	 **/
 	function __construct($url,
@@ -614,7 +616,8 @@ class PassLicense extends Wiki {
 			     $ipernity_licenses_blacklist,
 			     $picasa_licenses_blacklist,
 			     $flickr_api_key=null,
-			     $ipernity_api_key=null){
+			     $ipernity_api_key=null,
+				 $youtube_api_key=null){
 
 		Wiki::__construct($url); // Pass main parameter to parent Class' __construct()
 		$this->flickr_licenses_blacklist = $flickr_licenses_blacklist;
@@ -622,6 +625,7 @@ class PassLicense extends Wiki {
 		$this->picasa_licenses_blacklist = $picasa_licenses_blacklist;
 		$this->flickr_api_key = $flickr_api_key;
 		$this->ipernity_api_key = $ipernity_api_key;
+		$this->youtube_api_key = $youtube_api_key;
 		$this->site_url = parse_url($this->url);
 		$this->site_url = $this->site_url['scheme'].'://'.$this->site_url['host'].'/wiki/';
 	}
@@ -742,6 +746,18 @@ class PassLicense extends Wiki {
 					$url = $url;
 					$service = 'picasa_gplus';
 					break;
+					
+				// Youtube
+				}elseif(preg_match('/^(http|https){1}\:\/\/(www|){1}\.youtube\.com\/watch\?v=[\w-]+/',$url) >= 1){
+					$url = $url;
+					$service = 'youtube';
+					break;
+
+				// Youtube (short link
+				}elseif(preg_match('/^(http|https){1}\:\/\/youtu\.be\/[\w-]+/',$url) >= 1){
+					$url = $url;
+					$service = 'youtube_short';
+					break;
 
 				}// Add more services here
 			}
@@ -763,15 +779,27 @@ class PassLicense extends Wiki {
 				$service = 'flickr';
 
 			// Picasa (normal link)
-			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/[\p{L}\p{N}]+\/[\p{L}\p{N}]+#[\p{N}]+$/',$url) >= 1){
+			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/[\p{L}\p{N}]+\/[\p{L}\p{N}]+#[\p{N}]+$/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'picasa_url';
 				break;
 
 			// Picasa (Google+ link)
-			}elseif(preg_match('/^(http|https){1}\:\/\/plus\.google\.com\/photos\/\+[\p{L}\p{N}%]+\/albums\/[\p{N}]+\/[\p{N}]+\?pid\=[\p{N}]+&oid\=[\p{N}]+$/',$url) >= 1){
+			}elseif(preg_match('/^(http|https){1}\:\/\/plus\.google\.com\/photos\/\+[\p{L}\p{N}%]+\/albums\/[\p{N}]+\/[\p{N}]+\?pid\=[\p{N}]+&oid\=[\p{N}]+$/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'picasa_gplus';
+				break;
+
+			// Youtube
+			}elseif(preg_match('/^(http|https){1}\:\/\/(www|){1}\.youtube\.com\/watch\?v=[\w-]+/',$url_g) >= 1){
+				$url = $url_g;
+				$service = 'youtube';
+				break;
+
+			// Youtube (short link)
+			}elseif(preg_match('/^(http|https){1}\:\/\/youtu\.be\/[\w-]+/',$url_g) >= 1){
+				$url = $url_g;
+				$service = 'youtube_short';
 				break;
 			}
 		}
@@ -863,6 +891,34 @@ class PassLicense extends Wiki {
 
 				}else $service = false;
 				break;
+				
+				
+			case 'youtube':
+			case 'youtube_short':
+				switch($service){
+					case 'youtube':
+						$video_id = $this->getPhotoID($url,'v');
+						break;
+					case 'youtube_short':
+						$video_id = $this->getPhotoID($url,1);
+						break;
+				}
+
+				$result = $this->getYoutubeInfo($video_id);
+				
+				if($result !== false){
+					$photo_date_uploaded = strftime("%F %T",strtotime($result['items']['0']['snippet']['publishedAt']));
+					$thumburl = $result['items']['0']['snippet']['thumbnails']['medium']['url'];
+					$photourl = "https://youtu.be/$video_id";
+					$license = $result['items']['0']['contentDetails']['licensedContent'];
+					if($license == true){
+						$license = 'Youtube CC-BY';
+						$allowed = true;
+					}else $license = 'Youtube standard license';
+					$service = "Youtube";
+				}else $service = false;
+				break;
+
 			// Add more services here
 			default:
 				$service = false;
@@ -917,11 +973,10 @@ class PassLicense extends Wiki {
 			$id = $id[$where];
 		}elseif(is_string($where)){
 			$id = parse_url($url,PHP_URL_QUERY);
-			$id = parse_str($url,$params);
+			$id = parse_str($id,$params);
 			$id = $params[$where];
 			if(empty($id)) $id = false;
-		}else return false;
-
+		}else $id = false;
 		return $id;
 	}
 
@@ -1163,6 +1218,19 @@ class PassLicense extends Wiki {
 		$url_p[5] = "h$bestfit";
 		$url = $url_a['scheme'].'://'.$url_a['host'].implode('/',$url_p);
 		return $url;
+	}
+
+	/**
+	 * Get information about a video at Youtube, using the JSON result from API query (cached)
+	 * @param $id The Youtube video ID
+	 * @return array The desired information
+	**/	
+	function getYoutubeInfo($id){
+		$query = "https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails&maxResults=1&fields=items(contentDetails%2CfileDetails%2Csnippet)&id=$id&key=$this->youtube_api_key";
+		$result = file_get_contents($query);
+		$result = json_decode($result,true);
+		if(empty($result['items'])) $result = false;
+		return $result;
 	}
 }
 ?>

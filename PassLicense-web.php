@@ -92,7 +92,8 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 				$ipernity_licenses_blacklist,
 				$picasa_licenses_blacklist,
 				$flickr_api_key,
-				$ipernity_api_key);
+				$ipernity_api_key,
+				$youtube_api_key);
 	
 	// Set up the User agent (you can change it but avoid the UA from browsers)	
 	$wiki->setUserAgent('PassLicense/0,91 (https://github.com/Amitie10g/PassLicense_botclasses.php; davidkingnt@gmail.com) Botclasses.php/1.0');
