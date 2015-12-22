@@ -22,7 +22,7 @@ External services API support:
 * Picasa
 * Youtube
 
-The 'licensedContent' element belongs to the license of the video (if uses the CC license or the Standard Youtube license. Notice that the result is not totally accurate, and you should check the source video if unsure. Thumbnail is provided for convenience. 
+The 'licensedContent' (bool) element belongs to the license of the video (if uses the CC license or the Standard Youtube license). Notice that the result is not totally accurate, and you should check the source video if unsure. Thumbnail is provided for convenience. 
 
 Why not use Flinfo?
 
