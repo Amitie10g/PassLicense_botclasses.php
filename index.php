@@ -11,6 +11,7 @@ $wiki_password = ''; // Wiki password
 $wiki_url = ''; // Wiki project and API URL (eg. https://commons.wikimedia.org/w/api.php)
 $flickr_api_key = ''; // Required to interact with the Flickr API
 $ipernity_api_key = ''; // Required to interact with the Ipernity API
+$youtube_api_key = ''; // The Google API key to interact with the Youtube API
 $max_queries = 30; // Maximum queries to MediaWiki at once. This should be 30 for normal users, much more for bots
 
 // CSS colours in hexadecimal notation (either 3 or 6 digits)

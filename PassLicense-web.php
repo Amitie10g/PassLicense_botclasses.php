@@ -95,8 +95,8 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 				$ipernity_api_key,
 				$youtube_api_key);
 	
-	// Set up the User agent (you can change it but avoid the UA from browsers)	
-	$wiki->setUserAgent('PassLicense/0,91 (https://github.com/Amitie10g/PassLicense_botclasses.php; davidkingnt@gmail.com) Botclasses.php/1.0');
+	// Set up the User agent (you can change it but avoid the generic UA from browsers)	
+	$wiki->setUserAgent('PassLicense/0,92 (https://github.com/Amitie10g/PassLicense_botclasses.php; davidkingnt@gmail.com) Botclasses.php/1.0');
 
 	// Commit changes mode
 	if(isset($_GET['pass'])){
