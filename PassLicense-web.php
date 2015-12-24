@@ -55,7 +55,8 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 				 '{{OpenStreetMapreview|{{subst:REVISIONUSER}}|~~~~~}}',
 				 '{{Indian navy|status=confirmed|reviewer=~~~}}',
 				 '{{Cc-by-sa-3.0-FilmiTadka|passed|~~~}}',
-				 '{{Cc-by-3.0-BollywoodHungama|status=confirmed|reviewer=~~~}}');
+				 '{{Cc-by-3.0-BollywoodHungama|status=confirmed|reviewer=~~~}}',
+				 '{{Mushroomreview|{{subst:REVISIONUSER}}|~~~~~}}');
 
 	// Categories to list (without the Category: prefix)
 	$categories_review = array('License_review_needed',
@@ -64,6 +65,7 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 				   'Picasa_Web_Albums_files_needing_human_review',
 				   'Panoramio_images_needing_human_review',
 				   'Ipernity_review_needed',
+				   'Mushroom Observer review needed',
 				   'Unreviewed_photos_from_indiannavy.nic.in',
 				   'Filmitadka_review_needed',
 				   'Fotopolska_review_needed',

@@ -21,6 +21,7 @@ External services API support:
 * Ipernity
 * Picasa
 * Youtube
+* Mushroom Observer
 
 The 'licensedContent' (bool) element belongs to the license of the video (if uses the CC license or the Standard Youtube license). Notice that the result is not totally accurate, and you should check the source video if unsure. Thumbnail is provided for convenience. 
 
@@ -35,7 +36,7 @@ not totally accurate and does not show the actual license at the source, based o
 
 #To do:
 
-* Add support for more services (Panoramio, Mushroom Observer and Pixbay)
+* Add support for more services (Panoramio, Pixiv and Pixbay)
 * Add support for pages in large categories (the MediaWiki API make this very hard)
 
 I can do this job alone, but any help is welcome.

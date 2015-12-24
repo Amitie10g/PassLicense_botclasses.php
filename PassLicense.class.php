@@ -328,7 +328,7 @@ class Wiki {
 	**/
 	function categorymembers($category,$limit=10,$continue=null,$subcat=false){
 
-		$res = $this->query('?action=query&list=categorymembers&cmtype=file&cmsort=timestamp&cmdir=newer&format=php&cmtitle='.urlencode($category).'&cmlimit='.$limit.$continue);
+		$res = $this->query('?action=query&list=categorymembers&format=php&cmprop=title%7Ctype%7Ctimestamp&cmtype=file&cmsort=timestamp&cmdir=desc&cmnamespace=6&cmtitle='.urlencode($category).'&cmlimit='.$limit.$continue);
 
 		if (isset($res['error'])) return false;
 
@@ -505,7 +505,7 @@ class Wiki {
 	 * @param $page The "File:" page
 	 * @return string The user who uploaded the topmost version of the file.
 	 **/
-	function getfileuploader ($page){
+	function getfileuploader($page){
 		$x = $this->query('?action=query&format=php&prop=imageinfo&titles='.urlencode($page).'&iilimit=1&iiprop=user');
 		foreach ($x['query']['pages'] as $ret ){
 			if (isset($ret['imageinfo'][0]['user'])){
@@ -714,7 +714,6 @@ class PassLicense extends Wiki {
 	 * * If no valid URL found, return false.
 	**/
 	function getExternalInfo($url_g){
-
 		if(is_array($url_g)){
 			foreach($url_g as $url){
 
@@ -759,6 +758,11 @@ class PassLicense extends Wiki {
 					$service = 'youtube_short';
 					break;
 
+				// Mushroom Observer
+				}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}mushroomobserver\.org\/image\/show_image\/[0-9]+/',$url) >= 1){
+					$url = $url;
+					$service = 'mushroom_observer';
+					break;
 				}// Add more services here
 			}
 		}else{
@@ -767,16 +771,19 @@ class PassLicense extends Wiki {
 			if(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(flickr\.com\/photos\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'flickr';
+				break;
 
 			// Flcikr (short URL)
 			}elseif(preg_match('/^(http|https){1}\:\/\/flic\.kr\/p\/[\w]+$/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'flickr_short';
+				break;
 
 			// Ipernity
 			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}(ipernity\.com\/doc\/){1}[\w@]+\/[\w@]+/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'flickr';
+				break;
 
 			// Picasa (normal link)
 			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}picasaweb(\.google|){1}\.com\/[\p{L}\p{N}]+\/[\p{L}\p{N}]+#[\p{N}]+$/',$url_g) >= 1){
@@ -801,9 +808,15 @@ class PassLicense extends Wiki {
 				$url = $url_g;
 				$service = 'youtube_short';
 				break;
+
+			// Mushroom Observer
+			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}mushroomobserver\.org\/image\/show_image\/[0-9]+/',$url_g) >= 1){
+				$url = $url_g;
+				$service = 'mushroom_observer';
+				break;
 			}
 		}
-
+		
 		if(empty($url)) return false;
 
 		switch($service){
@@ -917,6 +930,35 @@ class PassLicense extends Wiki {
 					}else $license = 'Youtube standard license';
 					$service = "Youtube";
 				}else $service = false;
+				break;
+				
+			case 'mushroom_observer':
+
+				$photo_id = $this->getPhotoID($url,3);
+
+				// In the absence of an API, a very crude way of obtaining reliable data
+				// from source (HTML page itself)
+				$content = file_get_contents($url);
+				$photo_date_uploaded = substr($content,strpos($content,'When:')+6,10);
+				$license_p = strpos($content,'http://creativecommons.org/licenses/')+36;
+				$license = explode(' ',strtoupper(preg_replace('/ \"\>[\w\W]+/','',str_replace('/',' ',substr($content,$license_p,20)))));
+
+				switch($license[0]){
+					case 'BY-ND':
+					case 'BY-NC':
+					case 'BY-NC-SA':
+					case 'BY-NC-ND':
+						$allowed = false;
+						break;
+				}
+				$license = "$license[0] $license[1]";
+
+				$headers = get_headers("http://mushroomobserver.org/local_images/thumb/$photo_id.jpg");
+				if($headers[0] == 'HTTP/1.1 200 OK') $thumburl = "http://mushroomobserver.org/local_images/thumb/$photo_id.jpg";
+				else $thumburl = "http://mushroomobserver.org/local_images/thumb/$photo_id.png";
+
+				$service = 'Mushroom Observer';
+
 				break;
 
 			// Add more services here

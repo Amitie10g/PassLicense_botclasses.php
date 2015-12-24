@@ -116,7 +116,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 <?php } ?></datalist>
 <input type="submit" value="&#8811;"><?php if(!empty($_GET['category'])){ ?>&nbsp;<a href="<?= $uri_s[1] ?>"><?= $uri_s[2] ?></a>&nbsp;|&nbsp;<a href="<?= $uri_s[0] ?>&clear_cache">Clear cache</a><?php } ?>
 </form>
-<?php if(!empty($_GET['category'])){ ?><form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass">
+<?php if(!empty($_GET['category'])){ ?><form method="post" action="<?= $_SERVER['PHP_SELF'] ?>?pass" enctype='multipart/form-data'>
 <?php
 	if(!empty($pages)){
 		$num = 0;
