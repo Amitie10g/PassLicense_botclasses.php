@@ -20,10 +20,11 @@ External services API support:
 * Flickr
 * Ipernity
 * Picasa
-* Youtube
-* Mushroom Observer
+* Youtube - The 'licensedContent' (bool) element belongs to the license of the video (if uses the CC license or the Standard Youtube license). Notice that the result is not totally accurate, and you should check the source video if unsure. Thumbnail is provided for convenience. 
 
-The 'licensedContent' (bool) element belongs to the license of the video (if uses the CC license or the Standard Youtube license). Notice that the result is not totally accurate, and you should check the source video if unsure. Thumbnail is provided for convenience. 
+External service support (crude way, in absense of API):
+* Panoramio
+* Mushroom Observer
 
 Why not use Flinfo?
 
@@ -36,7 +37,7 @@ not totally accurate and does not show the actual license at the source, based o
 
 #To do:
 
-* Add support for more services (Panoramio, Pixiv and Pixbay)
+* Add support for more services (Pixiv, Pixbay, Bollywood Hungama and others)
 * Add support for pages in large categories (the MediaWiki API make this very hard)
 
 I can do this job alone, but any help is welcome.

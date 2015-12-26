@@ -763,6 +763,12 @@ class PassLicense extends Wiki {
 					$url = $url;
 					$service = 'mushroom_observer';
 					break;
+
+				// Panoramio
+				}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}panoramio\.com\/photo\/[0-9]+/',$url) >= 1){
+					$url = $url;
+					$service = 'panoramio';
+					break;
 				}// Add more services here
 			}
 		}else{
@@ -813,6 +819,12 @@ class PassLicense extends Wiki {
 			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}mushroomobserver\.org\/image\/show_image\/[0-9]+/',$url_g) >= 1){
 				$url = $url_g;
 				$service = 'mushroom_observer';
+				break;
+			
+			// Panoramio
+			}elseif(preg_match('/^(http|https){1}\:\/\/(www\.|){1}panoramio\.com\/photo\/[0-9]+/',$url_g) >= 1){
+				$url = $url_g;
+				$service = 'panoramio';
 				break;
 			}
 		}
@@ -951,7 +963,7 @@ class PassLicense extends Wiki {
 						$allowed = false;
 						break;
 				}
-				$license = "$license[0] $license[1]";
+				$license = "CC-$license[0] $license[1]";
 
 				$headers = get_headers("http://mushroomobserver.org/local_images/thumb/$photo_id.jpg");
 				if($headers[0] == 'HTTP/1.1 200 OK') $thumburl = "http://mushroomobserver.org/local_images/thumb/$photo_id.jpg";
@@ -959,6 +971,43 @@ class PassLicense extends Wiki {
 
 				$service = 'Mushroom Observer';
 
+				break;
+
+			case 'panoramio':
+				// Force SSL
+				$url = preg_replace('/^http\:\/\/(www\.|){1}panoramio\.com/','https://ssl.panoramio.com',$url);
+
+				$headers = get_headers($url);
+				if($headers[0] != 'HTTP/1.0 200 OK') return false;
+
+				$id = $this->GetPhotoID($url,2);
+
+				$content = file_get_contents($url);
+
+				// Another crude way to get reliable data in absense of API for individual photos
+				$photo_date_taken = str_replace('/','-',substr($content,strpos($content,'Taken on')+9,19));
+
+				$photo_date_uploaded = strftime("%F",strtotime(preg_replace('/^[?!\w, ]/','',str_replace('/','-',substr($content,strpos($content,'Uploaded on')+11,18)))));
+
+				$license = strtoupper(preg_replace('/\"[\w\W]+$/','',str_replace('/','-',substr($content,strpos($content,'li class="license')+18,10))));
+				switch($license){
+					case 'BY-ND':
+					case 'BY-NC':
+					case 'BY-NC-SA':
+					case 'BY-NC-ND':
+					case 'C':
+						$allowed = false;
+						break;
+				}
+				if(preg_match('/^(BY)/',$license) >= 1) $license = "CC-$license";
+				elseif(preg_match('/^(C)/',$license) >= 1) $license = 'All rights reserved';
+				else $license = 'Unknown';
+
+				$thumburl = "https://ssl.panoramio.com/photos/small/$id.jpg";
+				$photourl = $url;
+
+				$service = 'Panoramio';
+					
 				break;
 
 			// Add more services here
@@ -1233,7 +1282,7 @@ class PassLicense extends Wiki {
 		else{
 			// Only public feeds will be reterived. Otherwise, am HTTP 404 will be got
 			// Private feeds could be obtained with authentication using OAuth 2.0, but
-			// that feature is in researching and developement
+			// that feature is in researching and developement. Otherwise, you can implement it
 			$headers = get_headers($url.$query);
 			if($headers[0] == 'HTTP/1.0 200 OK'){
 				// Using file_get_contents() due cURL does not work with this result (tested)

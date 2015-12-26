@@ -170,7 +170,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 			<div class="img_bg">
 				<a href="<?= $photo_url ?>" target="<?= urlencode($page) ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
 			</div>
-			<div style="position:relative;top:-51px;background-color: rgba(204, 238, 255, 0.5)">
+			<div style="position:relative;top:-54px;background-color: rgba(204, 238, 255, 0.5)">
 			<b>Picture found at <?= ucfirst($external_service) ?></b><br>
 			<b>Date:</b> <?= $date ?>
 			<?php if(!empty($external_license)){ ?><br>
