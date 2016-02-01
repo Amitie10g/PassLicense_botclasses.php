@@ -147,7 +147,7 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 
 			$content = $wiki->replacestring($page,$replace,$with,$regex);
 
-			$summary = 'License review passed (using PassLicense)';
+			$summary = 'License review passed (using [[:meta:User:Amitie 10g/PassLicense|PassLicense]])';
 			$result[] = $wiki->edit($page,$content,$summary,true);
 		
 			// Unset the page contents cached
