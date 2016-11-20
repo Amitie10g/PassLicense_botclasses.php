@@ -35,7 +35,7 @@
  *      Gutza   - [[User:Gutza]]        - Submitted a patch for http->setHTTPcreds(), and http->quiet
  *      Sean    - [[User:SColombo]]     - Wrote the lyricwiki class (now moved to lyricswiki.php)
  *      Brain   - [[User:Brian_McNeil]] - Wrote wikipedia->getfileuploader() and wikipedia->getfilelocation
- *	Davod   - [[User:Amitie_10g]]   - See bellow:
+ *      Davod   - [[User:Amitie_10g]]   - See bellow:
  *
  *    Class "wikipedia" renamed to "wiki"
  *    Functions in Class "extended" merged into "wiki", to avoid issues
