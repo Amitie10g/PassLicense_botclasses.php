@@ -149,6 +149,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 				$external_service = $external_info['service'];
 				$thumburl_big = $wiki->getThumbURL($page,600);
 				$external_thumburl = $external_info['thumburl'];
+				$external_origurl = $external_info['originalimageurl'];
 				$text = $content['parse']['text']['*'];
 
 ?><div style="background:#<?= $bg ?>;margin:auto">
@@ -156,26 +157,38 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 <label style="float:left;font-weight:bold;width:97%;height:20px;margin:5px auto" class="collapse" for="<?= urlencode($page) ?>_details"><?= $page ?></label>
 <input id="<?= urlencode($page) ?>_details" type="checkbox" />
 <div class="upload_details" id="<?= urlencode($page) ?>_details"> 
-	<div style="text-align:center;min-height:200px;margin:auto;margin-bottom:10px">
-		<div style="display:inline-table;margin-bottom:-50px">
+	<div style="text-align:center;min-height:200px;margin:auto;margin-bottom:-20px">
+		<div style="display:inline-table"><?php if(!empty($thumburl)){ ?>
 			<div class="img_bg">
-				<a href="<?= $wiki->site_url ?><?= urlencode($page) ?>" target="_blank"><img src="<?= $thumburl ?>"></a>
+				<a href="<?= $wiki->site_url ?><?= urlencode($page) ?>" target="_blank"><img src="<?= $thumburl ?>" style="max-width:600px;max-height:190px"></a>
 			</div>
-			<div style="position:relative;top:-27px;background-color: rgba(204, 238, 255, 0.5);padding:5px;font-weight:bold">
+			<div style="position:relative;top:-25px;background-color: rgba(204, 238, 255, 0.5);padding:5px;font-weight:bold">
 				<a href="<?= $thumburl_big ?>" target="<?= urlencode($page) ?>">Bigger</a>&nbsp;|&nbsp;
 				<a target="_blank" href="https://www.google.com/searchbyimage?image_url=<?= $thumburl_big ?>">Google Image search</a>
 			</div>
+		<?php }else{ ?>
+			<div class="img_bg">
+				<a href="<?= $wiki->site_url ?><?= urlencode($page) ?>" target="_blank"><img src="no_thumbnail.png"></a>
+			</div>
+		<?php } ?>
 		</div>
 		<?php if(!empty($external_thumburl)){ ?><div style="display:inline-table;margin-bottom:-50px">
 			<div class="img_bg">
-				<a href="<?= $photo_url ?>" target="<?= urlencode($page) ?>"><img style="height:190px" src="<?= $external_thumburl ?>"/></a>
+				<a href="<?= $photo_url ?>" target="<?= urlencode($page) ?>"><img style="height:190px !important" src="<?= $external_thumburl ?>"/></a>
 			</div>
-			<div style="position:relative;top:-54px;background-color: rgba(204, 238, 255, 0.5)">
+			<div style="position:relative;top:-47px;background-color: rgba(204, 238, 255, 0.5)">
 			<b>Picture found at <?= ucfirst($external_service) ?></b><br>
 			<b>Date:</b> <?= $date ?>
 			<?php if(!empty($external_license)){ ?><br>
 			<b>License:</b> <?= $external_license ?><?php } ?></div>
 		</div><?php } ?>
+	</div>
+	<div style="width:600px;margin:auto;text-align:left">
+	<input style="margin:12px 0 12px 0" type="checkbox" name="reupload[<?= urlencode($page) ?>][reupload]" id="<?= urlencode($page) ?>_reupload" />
+	
+	<label style="font-weight:bold;height:20px;" for="<?= urlencode($page) ?>_reupload">Reupload?</label>
+	<input style="width:500px" type="text" name="reupload[<?= urlencode($page) ?>][source]" value="<?= $external_origurl ?>">
+	
 	</div>
 
 	<div style="padding:10px;vertical-align:middle;width:1220px;margin:auto">
