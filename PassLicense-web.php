@@ -2,7 +2,7 @@
 /**
  * PassLicense: botclases.php based MediaWiki for semiautomated license review
  *
- *  (c) 2015 Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
+ * @copyright (c) 2015	Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -108,12 +108,25 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 	
 		$login = $wiki->login($wiki_user,$wiki_password);
 		if($login['login']['result'] != 'Success') $error = 'Not logged in';
+		
 		if(empty($pages)) $error = 'No data given';
 
 		if(!empty($error)){
 			$_SESSION['result'] = array('errors'=>$error);
 			header('Location: '.$_SERVER['PHP_SELF']."?category=$category");
 			die();	
+		}
+		
+		$files_reupload = $_POST['reupload'];
+		
+		foreach($files_reupload as $get_filename => $get_source){
+			
+			$filename = $get_filename;
+			$source = $get_source['source'];
+			$reupload = $get_source['reupload'];
+			
+			if(!empty($reupload)) $wiki->upload_from_external($filename,$source);
+			
 		}
 	
 		$count = 0;
