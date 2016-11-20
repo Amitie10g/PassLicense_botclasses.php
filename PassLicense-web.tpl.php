@@ -2,7 +2,7 @@
 /**
  * PassLicense: botclases.php based MediaWiki for semiautomated license review
  *
- *  (c) 2015 Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
+ * @copyright (c) 2015	Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
