@@ -485,6 +485,35 @@ class Wiki {
 		return $this->query('?action=edit&format=php'.$maxlag,$params);
 	}
 
+	/**
+	 * Upload a file from external source.
+	 * @param $page Page name to commit the file.
+	 * @param $source The URL of the file.
+	 * @return array The API result
+	 **/	
+	function upload_from_external($page,$source){
+		
+		if(empty($source)) return false;
+		if(empty($page)) return false;
+		
+		if ($this->token==null){
+			$this->token = $this->getedittoken();
+		}
+		
+		$filename = urldecode($page);
+		$url = $source;
+		
+		$params = array(
+			'token' => $this->token,
+			'ignorewarnings' => 'true',
+			'comment' => 'Reuploading from source at highest resolution.'
+		);
+
+		$query_upload = "?action=upload&filename=$filename&url=$url&format=php";
+		
+		return $this->query($query_upload,$params);
+	}
+
 	/**  BMcN 2012-09-16
 	 * Retrieve a media file's actual location.
 	 * @param $page The "File:" page on the wiki which the URL of is desired.
@@ -662,6 +691,7 @@ class PassLicense extends Wiki {
 	 * @return string The URL as string
 	**/
 	function getThumbURL($page,$width=null,$height=null){
+		
 		if(!is_numeric($width)) $width = '2000';
 		if(!is_numeric($height)) $height = '2000';
 
@@ -860,7 +890,9 @@ class PassLicense extends Wiki {
 					$license = $this->getFlickrLicense($photo_license);
 
 					$photourl = $photo_info['photo']['urls']['url'][0]['_content'];
-					$thumburl = $this->getFlickrThumbURL($photo_id);
+					$image_urls = $this->getFlickrPhotoURL($photo_id);
+					$thumburl = $image_urls['thumburl'];
+					$originalimageurl = $image_urls['originalurl'];
 
 					$service = 'Flickr';
 
@@ -1022,6 +1054,7 @@ class PassLicense extends Wiki {
 			     'date_uploaded'=>$photo_date_uploaded,
 			     'date_taken'=>$photo_date_taken,
 			     'thumburl'=>$thumburl,
+				 'originalimageurl'=>$originalimageurl,
 			     'photourl'=>$photourl,
 			     'allowed'=>$allowed);
 	}
@@ -1164,7 +1197,7 @@ class PassLicense extends Wiki {
 	 * @param $max_height = The maximum desired height
 	 * @return string The numeric ID
 	**/
-	function getFlickrThumbURL($id,$max_height=200){
+	function getFlickrPhotoURL($id,$max_height=200){
 		if(!empty($_SESSION['flickr_thumburl'][$id])) $result = $_SESSION['flickr_thumburl'][$id];
 		else{
 			$url    = "https://api.flickr.com/services/rest/";
@@ -1178,11 +1211,13 @@ class PassLicense extends Wiki {
 
 			foreach($get_sizes as $size){
 				$sizes[] = $size['height'];
+				if($size['label'] == "Original") $size_orig = $size['height'];
 			}
 
 			$best_fit = $this->bestFit($max_height,$sizes,true);
-
-			return $get_sizes[$best_fit]['source'];
+			$size_orig = count($sizes)-1;
+			
+			return array('thumburl'=>$get_sizes[$best_fit]['source'],'originalurl'=>$get_sizes[$size_orig]['source']);
 		}else return false;
 	}
 
