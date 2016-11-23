@@ -2,7 +2,7 @@
 /**
  * PassLicense: botclases.php based MediaWiki for semiautomated license review
  *
- * @copyright (c) 2015	Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
+ * @copyright (c) 2015 Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -124,8 +124,9 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 			$filename = $get_filename;
 			$source = $get_source['source'];
 			$reupload = $get_source['reupload'];
+			$summary = 'Reuploading from source at highest resolution (using [[:meta:User:Amitie 10g/PassLicense|PassLicense]]).';
 			
-			if(!empty($reupload)) $wiki->upload_from_external($filename,$source);
+			if(!empty($reupload)) $wiki->upload_from_external($filename,$source,$summary);
 			
 		}
 	
@@ -134,7 +135,7 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 			// Avoid the API blocking by sleeping the script each certain ammount of queries
 			if(!is_int($max_queries)) $max_queries = 30;
 			$num = $count/$max_queries;
-			if(!is_int($num) && $num > 0) sleep(5);
+			if(!is_int($num) && $num > 0) sleep(2);
 
 			if(!empty($_POST['replace_1'][$page])){
 				$replace[1] = $_POST['replace_1'][$page];
@@ -160,7 +161,7 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 
 			$content = $wiki->replacestring($page,$replace,$with,$regex);
 
-			$summary = 'License review passed (using [[:meta:User:Amitie 10g/PassLicense|PassLicense]])';
+			$summary = 'License review passed (using [[:meta:User:Amitie 10g/PassLicense|PassLicense]]).';
 			$result[] = $wiki->edit($page,$content,$summary,true);
 		
 			// Unset the page contents cached
