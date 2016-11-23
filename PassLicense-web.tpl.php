@@ -2,7 +2,7 @@
 /**
  * PassLicense: botclases.php based MediaWiki for semiautomated license review
  *
- * @copyright (c) 2015	Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
+ * @copyright (c) 2015 Davod - https://commons.wikimedia.org/wiki/User:Amitie_10g
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -95,6 +95,7 @@ if(!defined('IN_PassLicense')) die(); ?><html>
 		if($num%2 == 0)	$bg = $color_details_1;
 		else $bg = $color_details_2; ?>
 <div style="background:#<?= $bg ?>;margin:auto;padding:5px">
+
 <?php if($item['edit']['result'] == 'Success') { ?><a href="<?= $wiki->site_url ?><?= $item['edit']['title'] ?>"><b><?= $item['edit']['title'] ?>:</b> Success</a><?php }else{ ?><b><?= $key ?>:</b> Error<?php } ?>
 <label class="collapse" for="<?= $key ?>_details">[Details]</label>
 <input id="<?= $key ?>_details" type="checkbox">
