@@ -491,7 +491,7 @@ class Wiki {
 	 * @param $source The URL of the file.
 	 * @return array The API result
 	 **/	
-	function upload_from_external($page,$source){
+	function upload_from_external($page,$source,$summary){
 		
 		if(empty($source)) return false;
 		if(empty($page)) return false;
@@ -506,7 +506,7 @@ class Wiki {
 		$params = array(
 			'token' => $this->token,
 			'ignorewarnings' => 'true',
-			'comment' => 'Reuploading from source at highest resolution.'
+			'comment' => $summary
 		);
 
 		$query_upload = "?action=upload&filename=$filename&url=$url&format=php";
