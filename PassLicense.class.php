@@ -492,8 +492,6 @@ class Wiki {
 	 * @return void
 	 **/	
 	function write_log($result,$page){
-		
-		var_dump($result);
 
 		if(empty($result)) return false;
 
