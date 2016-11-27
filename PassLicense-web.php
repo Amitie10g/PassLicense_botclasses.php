@@ -176,7 +176,7 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 		$_SESSION['result'] = $result;
 		if(isset($_POST['blacklisted'])) $blacklisted = "&show_blacklisted";
 		header('Location: '.$_SERVER['PHP_SELF']."?category=$category$blacklisted");
-		die();
+		die;
 
 	// Clear cache mode
 	}elseif(isset($_GET['clear_cache'])){
