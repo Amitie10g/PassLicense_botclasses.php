@@ -170,6 +170,13 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 			$count++;
 		}
 
+		$log_page = "User:$wiki_user/Passlicense_log";
+		$log_writen = $wiki->write_log($result,$log_page);
+		
+		var_dump($log_writen);
+		
+		die;
+		
 		$_SESSION['result'] = $result;
 		if(isset($_POST['blacklisted'])) $blacklisted = "&show_blacklisted";
 		header('Location: '.$_SERVER['PHP_SELF']."?category=$category$blacklisted");
