@@ -490,7 +490,7 @@ class Wiki {
 	 * @param $result The result returned by write() operation when saving the changes.
 	 * @param $page The Wiki page to write.
 	 * @return void
-	 **/	
+	 **/
 	function write_log($result,$page){
 
 		if(empty($result)) return false;
@@ -498,6 +498,80 @@ class Wiki {
 		if ($this->token==null){
 			$this->token = $this->getedittoken();
 		}
+
+		
+		//:: Write current day log page (only once)
+		
+		$content_page_current = "This page contains the PassLicense's today log commanded by this user.";		
+		$content_page_current.= '{{#ifexist:' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}|\'\'\'&nbsp;[[' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}|Monthly archive]]\'\'\' contain past logs}}' . PHP_EOL;
+		$content_page_current .= '{{#ifexist:' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}/{{CURRENTDAY}}|{{' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}/{{CURRENTDAY}}}}}}' . PHP_EOL;
+		
+		$params_page_current = array(
+			'title' => $page,
+			'text' => $content_page_current,
+			'token' => $this->token,
+			'watchlist' => 'watch',
+			'createonly' => 'true',
+			($minor?'minor':'notminor') => '1',
+			($bot?'bot':'notbot') => '1'
+		);
+
+		$current_log_result = $this->query('?action=edit&format=php'.$maxlag,$params_page_current);
+
+		//:: Write the yearly page
+		
+		$months_of_year = 12;
+		$page_year = "$page/" . date('Y');
+		$year = date('Y');
+		
+		for($yy=$year;$yy<=($year+10);$yy++){
+			$content_page_year .= "[[$page/$yy|$yy]]&nbsp;";
+		}
+
+		$content_page_year .= PHP_EOL . '----' . PHP_EOL;
+		
+		for($my=1;$my<=$months_of_year;$my++){
+
+			$content_page_year .= '[[' . $page_year . '/' . str_pad($my, 2,'0',STR_PAD_LEFT) . '|' . date('F',strtotime($year . '/' . str_pad($my, 2,'0',STR_PAD_LEFT) . '/01')) . ']]&nbsp;';
+		}
+
+		$params_page_year = array(
+			'title' => $page_year,
+			'text' => $content_page_year,
+			'token' => $this->token,
+			'watchlist' => 'watch',
+			'createonly' => 'true',
+			($minor?'minor':'notminor') => '1',
+			($bot?'bot':'notbot') => '1'
+		);
+		
+		$result_page_year = $this->query('?action=edit&format=php'.$maxlag,$params_page_year);
+		
+		//:: Write the montly page and the daily log hearder montly
+
+		//Get the days of the current month (once per month)
+		$days_of_month = date('t');
+		$page_month = "$page/" . date('Y/m');
+
+		$content_page_month = '==' . date('F Y') . '=='  . PHP_EOL;
+		
+		for($dm=1;$dm<=$days_of_month;$dm++){
+			$content_page_month .= '[[' . $page_month . '/' . str_pad($dm, 2,'0',STR_PAD_LEFT) . '|' . str_pad($dm, 2,'0',STR_PAD_LEFT) . ']]&nbsp;';	
+		}
+		
+		$content_page_month.= PHP_EOL;
+
+		$params_page_month = array(
+			'title' => $page_month,
+			'text' => $content_page_month,
+			'token' => $this->token,
+			'watchlist' => 'watch',
+			'createonly' => 'true',
+			($minor?'minor':'notminor') => '1',
+			($bot?'bot':'notbot') => '1'
+		);
+		
+		$monthy_log_result = $this->query('?action=edit&format=php'.$maxlag,$params_page_month);
 
 		//:: Write/append the log to daily page
 		
@@ -512,8 +586,6 @@ class Wiki {
 		
 		$archive_page = "$page/" . date('Y/m/d');
 
-		$page_written = $this->query('?action=edit&format=php'.$maxlag,$params_page);
-		
 		$params_log = array(
 			'title' => $archive_page,
 			'appendtext' => $content_log,
@@ -524,55 +596,8 @@ class Wiki {
 		);
 		
 		$daily_log_result = $this->query('?action=edit&format=php'.$maxlag,$params_log);
-
-		//:: Write the montly log
-
-		//Get the days of the current month (once per month)
-		$days_of_month = date('t');
-		$page_month = "$page/" . date('Y/m');
-
-		$prev_date = date('Y/m', strtotime('-1 month'));
-		$next_date = date('Y/m', strtotime('+1 month'));
 		
-		$prev_date_name = date('F', strtotime('-1 month'));
-		$next_date_name = date('F', strtotime('+1 month'));
-
-		$content_page_month = '<noinclude>==' . date('Y/F') . '==</noinclude>'  . PHP_EOL;
-		$content_page_month.= "[[$page/$prev_date|$prev_date_name]] | [[$page/{{CURRENTYEAR}}/{{CURRENTMONTH}}|Current month]] | [[$page/$next_date|$next_date_name]]" . PHP_EOL;
 		
-		for($i=1;$i<=$days_of_month;$i++){
-			$content_page_month .= '{{#ifexist:' . "$page_month/$i" . '| {{' . "$page_month/$i" . '}}}}';
-		}
-		
-		$content_page_month.= PHP_EOL . "[[$page/$prev_date|$prev_date_name]] | [[$page/{{CURRENTYEAR}}/{{CURRENTMONTH}}|Current month]] | [[$page/$next_date|$next_date_name]]" . PHP_EOL;
-
-		$params_page_month = array(
-			'title' => $page_month,
-			'text' => $content_page_month,
-			'token' => $this->token,
-			'watchlist' => 'watch',
-			'createonly' => 'true',
-			($minor?'minor':'notminor') => '1',
-			($bot?'bot':'notbot') => '1'
-		);
-		
-		$monthy_log_result = $this->query('?action=edit&format=php'.$maxlag,$params_page_month);
-		
-		//:: Write current log page (only once)
-		
-		$content_page_current = '{{#ifexist:' . $page_month . '| {{' . $page_month . '}}}}';
-		
-		$params_page_current = array(
-			'title' => $page,
-			'text' => $content_page_current,
-			'token' => $this->token,
-			'watchlist' => 'watch',
-			'createonly' => 'true',
-			($minor?'minor':'notminor') => '1',
-			($bot?'bot':'notbot') => '1'
-		);
-
-		$current_log_result = $this->query('?action=edit&format=php'.$maxlag,$params_page_current);
 		
 		return array('daily_log_result'=>$daily_log_result,'monthy_log_result'=>$monthy_log_result,'current_log_result'=>$current_log_result);
 	}
