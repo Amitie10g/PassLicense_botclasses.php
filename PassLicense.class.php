@@ -504,7 +504,7 @@ class Wiki {
 		
 		$content_page_current = "This page contains the PassLicense's today log commanded by this user.";		
 		$content_page_current.= '{{#ifexist:' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}|\'\'\'&nbsp;[[' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}|Monthly archive]]\'\'\' contain past logs}}' . PHP_EOL;
-		$content_page_current .= '{{#ifexist:' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}/{{CURRENTDAY}}|{{' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}/{{CURRENTDAY}}}}}}' . PHP_EOL;
+		$content_page_current .= '{{#ifexist:' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}/{{CURRENTDAY2}}|{{' . $page . '/{{CURRENTYEAR}}/{{CURRENTMONTH}}/{{CURRENTDAY2}}}}}}' . PHP_EOL;
 		
 		$params_page_current = array(
 			'title' => $page,
