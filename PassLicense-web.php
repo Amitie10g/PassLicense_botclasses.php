@@ -29,7 +29,7 @@
 if(!defined('IN_PassLicense')) die();
 define('TEMP_PATH',realpath(sys_get_temp_dir()));
 
-set_time_limit(300);
+set_time_limit(600);
 
 session_start();
 
@@ -52,6 +52,7 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 				 '{{Ipernityreview|{{subst:REVISIONUSER}}|~~~~~}}',
 				 '{{Picasareview|{{subst:REVISIONUSER}}|~~~~~}}',
 				 '{{Panoramioreview|{{subst:REVISIONUSER}}|~~~~~}}',
+				 '{{subst:PBLR|<id>}}',
 				 '{{OpenStreetMapreview|{{subst:REVISIONUSER}}|~~~~~}}',
 				 '{{Indian navy|status=confirmed|reviewer=~~~}}',
 				 '{{Cc-by-sa-3.0-FilmiTadka|passed|~~~}}',
@@ -65,6 +66,7 @@ if($wiki_url_headers[0] == 'HTTP/1.1 200 OK'){
 				   'Picasa_Web_Albums_files_needing_human_review',
 				   'Panoramio_images_needing_human_review',
 				   'Ipernity_review_needed',
+				   'Unreviewed files from Pixabay',
 				   'Mushroom Observer review needed',
 				   'Unreviewed_photos_from_indiannavy.nic.in',
 				   'Filmitadka_review_needed',
